@@ -124,10 +124,10 @@ mod tests {
         let sha = "0123456789abcdef0123456789abcdef01234567";
         let push = |reference: &str, after: &str| {
             json!({ "ref": reference, "after": after, "deleted": false,
-                    "repository": { "full_name": "ultramarine-server/Recipes" } })
+                    "repository": { "full_name": "ultramarine-linux/Recipes" } })
         };
         let route = |event, payload: &Value| {
-            route_event(event, payload, "Ultramarine-Server/recipes", "main")
+            route_event(event, payload, "Ultramarine-Linux/recipes", "main")
         };
 
         assert_eq!(route("ping", &json!({})).status, 200);

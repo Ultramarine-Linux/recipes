@@ -47,7 +47,7 @@ impl Config {
         let port = port(get)?;
         let data_dir = std::path::absolute(get("DATA_DIR").unwrap_or_else(|| "/data".into()))
             .context("DATA_DIR")?;
-        let repo = get("RECIPES_REPO").unwrap_or_else(|| "Ultramarine-Server/recipes".into());
+        let repo = get("RECIPES_REPO").unwrap_or_else(|| "Ultramarine-Linux/recipes".into());
         let branch = get("RECIPES_BRANCH").unwrap_or_else(|| "main".into());
         ensure!(
             repo.split_once('/').is_some_and(|(owner, name)| {
@@ -125,7 +125,7 @@ mod tests {
         let config = config(&[("GITHUB_WEBHOOK_SECRET", "s")]).unwrap();
         assert_eq!(config.port, 8080);
         assert_eq!(config.data_dir, PathBuf::from("/data"));
-        assert_eq!(config.repo, "Ultramarine-Server/recipes");
+        assert_eq!(config.repo, "Ultramarine-Linux/recipes");
         assert_eq!(config.branch, "main");
         assert!(config.cloudflare.is_none());
     }

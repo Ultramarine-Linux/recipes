@@ -6,7 +6,7 @@ members = ["crates/*"]
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-or-later"
-repository = "https://github.com/Ultramarine-Server/recipes"
+repository = "https://github.com/Ultramarine-Linux/recipes"
 publish = false
 
 [workspace.dependencies]

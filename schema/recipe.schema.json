@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://github.com/Ultramarine-Server/recipes/schema/recipe.schema.json",
+	"$id": "https://github.com/Ultramarine-Linux/recipes/schema/recipe.schema.json",
 	"title": "Tetra app recipe",
 	"description": "Mirrors `AppRecipe` in tetra-recipe (tetra's crates/tetra-recipe). The English strings here are the translation source; `cargo run -p recipes -- extract` copies them into locales/en.json.",
 	"type": "object",

@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json-schema.org/draft/2020-12/schema",
-	"$id": "https://github.com/Ultramarine-Server/recipes/schema/catalog.schema.json",
+	"$id": "https://github.com/Ultramarine-Linux/recipes/schema/catalog.schema.json",
 	"title": "Recipe catalog metadata",
 	"type": "object",
 	"additionalProperties": false,

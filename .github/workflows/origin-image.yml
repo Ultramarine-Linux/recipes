@@ -2,7 +2,7 @@ name: Origin image
 
 # Builds origin/Containerfile (the recipes-origin webhook builder) for amd64
 # and arm64 and publishes a signed multi-arch image to
-# ghcr.io/ultramarine-server/recipes-builder with the shared FyraLabs/actions
+# ghcr.io/ultramarine-linux/recipes-builder with the shared FyraLabs/actions
 # Docker workflow. `main` is the tag infra-joever deploys. Pull requests only
 # build, after a local smoke test of each architecture.
 
@@ -79,7 +79,7 @@ jobs:
       publish: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       context: .
       dockerfile: origin/Containerfile
-      image_name: ultramarine-server/recipes-builder
+      image_name: ultramarine-linux/recipes-builder
     permissions:
       contents: read
       packages: write

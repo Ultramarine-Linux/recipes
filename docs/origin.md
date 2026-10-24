@@ -21,7 +21,7 @@ pushes it missed, and retries every five minutes until something is live.
 | ------------------------- | ---------------------------- | ----------------------------------------------------------------------- |
 | `PORT`                    | `8080`                       |                                                                         |
 | `DATA_DIR`                | `/data`                      | shared with Caddy, which serves `$DATA_DIR/current`                     |
-| `RECIPES_REPO`            | `Ultramarine-Server/recipes` |                                                                         |
+| `RECIPES_REPO`            | `Ultramarine-Linux/recipes` |                                                                         |
 | `RECIPES_BRANCH`          | `main`                       |                                                                         |
 | `GITHUB_WEBHOOK_SECRET`   | required                     | unless `ALLOW_UNSIGNED_WEBHOOKS=1` (local development only)             |
 | `GITHUB_TOKEN`            | none                         | optional; avoids API rate limits, needed for private repositories      |
@@ -51,7 +51,7 @@ In the repository settings → Webhooks, set the payload URL
 
 ## Image
 
-The image is `ghcr.io/ultramarine-server/recipes-builder`, a signed
+The image is `ghcr.io/ultramarine-linux/recipes-builder`, a signed
 multi-arch (amd64, arm64) image built by `.github/workflows/origin-image.yml`
 through the shared FyraLabs/actions `docker.yml` workflow. Pushes to `main`
 publish `:main` (what infra-joever deploys) and `:main-<timestamp>`; pull

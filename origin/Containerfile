@@ -1,4 +1,4 @@
-# The origin builder image (ghcr.io/ultramarine-server/recipes-builder).
+# The origin builder image (ghcr.io/ultramarine-linux/recipes-builder).
 #
 # Build from the repository root:
 #
@@ -26,7 +26,7 @@ FROM gcr.io/distroless/cc-debian13:nonroot
 # docker/metadata-action derives from the repository.
 LABEL org.opencontainers.image.title="Ultramarine Server recipes origin" \
     org.opencontainers.image.description="Rebuilds and serves the Ultramarine Server recipe catalog on every push" \
-    org.opencontainers.image.source="https://github.com/Ultramarine-Server/recipes" \
+    org.opencontainers.image.source="https://github.com/Ultramarine-Linux/recipes" \
     org.opencontainers.image.vendor="Fyra Labs" \
     org.opencontainers.image.licenses="AGPL-3.0-or-later"
 

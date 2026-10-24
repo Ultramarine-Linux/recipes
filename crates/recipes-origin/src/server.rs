@@ -200,7 +200,7 @@ mod tests {
     fn push() -> String {
         serde_json::json!({
             "ref": "refs/heads/main", "after": SHA, "deleted": false,
-            "repository": { "full_name": "Ultramarine-Server/recipes" }
+            "repository": { "full_name": "Ultramarine-Linux/recipes" }
         })
         .to_string()
     }
@@ -272,7 +272,7 @@ mod tests {
                 .unwrap(),
         )
         .unwrap();
-        assert_eq!(status["repo"], "Ultramarine-Server/recipes");
+        assert_eq!(status["repo"], "Ultramarine-Linux/recipes");
         assert_eq!(status["current"], Value::Null);
         assert_eq!(status["last_error"], Value::Null);
         let missing = client.get(format!("{url}/nope")).send().await.unwrap();
