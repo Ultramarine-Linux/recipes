@@ -74,7 +74,7 @@ jobs:
   docker:
     needs: smoke-build
     # Pinned: this job can push and sign the image. Bump deliberately.
-    uses: FyraLabs/actions/.github/workflows/docker.yml@51d6b104753065880d3735f4e98672e331bab925 # main, 2026-10-22
+    uses: FyraLabs/actions/.github/workflows/docker.yml@d52e087213e43c06fa29d906bcd9dfb755dcd6b0 # main, 2026-10-24
     with:
       publish: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
       context: .
