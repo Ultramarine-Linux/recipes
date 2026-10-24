@@ -3,6 +3,7 @@ name = "recipes-origin"
 description = "Origin builder for the recipe catalog: rebuilds it on GitHub pushes"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 repository.workspace = true
 publish.workspace = true
 

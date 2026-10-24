@@ -1,8 +1,9 @@
 [package]
 name = "recipes"
-description = "Check, extract and build the Ultramarine Server recipe catalog"
+description = "Check, extract, and build the Ultramarine Server recipe catalog"
 version.workspace = true
 edition.workspace = true
+license.workspace = true
 repository.workspace = true
 publish.workspace = true
 

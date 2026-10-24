@@ -46,3 +46,7 @@ don't commit that):
 ```sh
 cargo --config 'patch."https://github.com/Ultramarine-Linux/tetra".tetra-recipe.path="../tetra/crates/tetra-recipe"' run -p recipes -- check
 ```
+
+## License
+
+This project is licensed under AGPL-3.0, but you may use any later version.

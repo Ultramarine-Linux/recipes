@@ -21,6 +21,15 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     && install -d /out/data
 
 FROM gcr.io/distroless/cc-debian13:nonroot
+
+# For local builds. The shared docker workflow replaces these with labels
+# docker/metadata-action derives from the repository.
+LABEL org.opencontainers.image.title="Ultramarine Server recipes origin" \
+    org.opencontainers.image.description="Rebuilds and serves the Ultramarine Server recipe catalog on every push" \
+    org.opencontainers.image.source="https://github.com/Ultramarine-Server/recipes" \
+    org.opencontainers.image.vendor="Fyra Labs" \
+    org.opencontainers.image.licenses="AGPL-3.0-or-later"
+
 COPY --from=build /out/usr/local/bin/recipes-origin /usr/local/bin/recipes-origin
 # Owned by the nonroot user, so a fresh named volume mounted here is writable.
 COPY --from=build --chown=65532:65532 /out/data /data
