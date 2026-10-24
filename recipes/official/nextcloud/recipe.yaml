@@ -4,7 +4,7 @@ name: Nextcloud
 description: Run Nextcloud with MariaDB, optional Redis, and managed Podman volumes.
 category: apps
 icon: nextcloud
-version: 0.1.1
+version: 0.1.2
 requires:
   - podman
   - quadlets
@@ -82,20 +82,20 @@ parameters:
 resources:
   - type: network
     filename: "{{ app_id }}-net.network"
-    template: networks/bridge.network.tera
+    template: shared/bridge.network.tera
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-db.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}-db.container"
-    template: containers/mariadb.container.tera
+    template: mariadb.container.tera
   - type: container
     filename: "{{ app_id }}-redis.container"
-    template: containers/redis.container.tera
+    template: redis.container.tera
     condition: "enable_redis == true"
   - type: container
     filename: "{{ app_id }}-app.container"
-    template: containers/nextcloud.container.tera
+    template: nextcloud.container.tera

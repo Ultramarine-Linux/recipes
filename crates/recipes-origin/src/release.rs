@@ -429,15 +429,15 @@ mod tests {
         fs::write(
             recipe.join("recipe.yaml"),
             format!(
-                "recipe_id: demo\nname: Demo\nversion: {version}\ncategory: web\nresources:\n  - type: file\n    filename: a.txt\n    template: files/a.txt.tera\n"
+                "recipe_id: demo\nname: Demo\nversion: {version}\ncategory: web\nresources:\n  - type: file\n    filename: a.txt\n    template: a.txt.tera\n"
             ),
         )?;
         fs::write(
             recipe.join("locales/en.json"),
             "{\n\t\"name\": \"Demo\"\n}\n",
         )?;
-        fs::create_dir_all(dir.join("templates/files"))?;
-        fs::write(dir.join("templates/files/a.txt.tera"), "hello\n")?;
+        fs::create_dir_all(recipe.join("templates"))?;
+        fs::write(recipe.join("templates/a.txt.tera"), "hello\n")?;
         Ok(())
     }
 
@@ -468,13 +468,13 @@ mod tests {
         // A failing check leaves the live release alone.
         let failed = build_release(data.path(), SHA_B, |dir| async move {
             write_source(&dir, "1.0.0")?;
-            fs::write(dir.join("templates/unused.tera"), "")?;
+            fs::write(dir.join("recipes/official/demo/templates/unused.tera"), "")?;
             Ok(())
         })
         .await;
         let error = format!("{:#}", failed.unwrap_err());
         assert!(
-            error.contains("templates/unused.tera is not used"),
+            error.contains("recipes/official/demo/templates/unused.tera is not used"),
             "{error}"
         );
         assert_eq!(current(data.path()).unwrap().sha, SHA_A);

@@ -59,7 +59,7 @@ Serve both with `Access-Control-Allow-Origin: *` so dashboards can fetch them.
 	"version": "0.1.1",
 	"sha256": "<tetra bundle digest>",
 	"recipe": "<exact recipe.yaml text>",
-	"templates": { "containers/mariadb.container.tera": "..." },
+	"templates": { "mariadb.container.tera": "...", "shared/named.volume.tera": "..." },
 	"locales": { "de": { "name": "Nextcloud", "parameters": { "admin_user": { "label": "Admin-Benutzer" } } } }
 }
 ```

@@ -6,10 +6,15 @@
 //! catalog.yaml                               name and categories
 //! locales/<locale>.json                      category translations
 //! recipes/<tier>/<id>/recipe.yaml            a recipe; <tier> is official or community
+//! recipes/<tier>/<id>/templates/             its own Tera templates
 //! recipes/<tier>/<id>/locales/<locale>.json  its translations
-//! templates/                                 Tera templates shared by all recipes
+//! shared/                                    image-free templates any recipe can use
 //! schema/                                    JSON schemas for the YAML files
 //! ```
+//!
+//! A `resources[].template` of `shared/<path>` names `shared/<path>`; any
+//! other path names a file in the recipe's own `templates/`. The name, as
+//! written, is the template's key in the published bundle.
 
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -72,11 +77,16 @@ pub struct Repo {
     pub catalog_locales: Locales,
     /// Sorted by id (byte order), then tier.
     pub recipes: Vec<Recipe>,
-    /// Every file under `templates/`, as sorted `/`-separated relative paths.
-    pub template_files: Vec<String>,
+    /// Every file under `shared/`, as sorted `/`-separated paths relative to it.
+    pub shared_files: Vec<String>,
+    /// Whether the old top-level `templates/` directory still exists.
+    pub legacy_templates_dir: bool,
     /// Directories under `recipes/` that aren't a tier.
     pub stray_dirs: Vec<String>,
 }
+
+/// Prefix of template names that refer to `shared/`.
+pub const SHARED_PREFIX: &str = "shared/";
 
 #[derive(Debug, Clone)]
 pub struct Recipe {
@@ -89,11 +99,14 @@ pub struct Recipe {
     pub yaml: String,
     /// `recipe.yaml`, parsed loosely (for the schema and extraction).
     pub doc: Value,
-    /// The templates `resources` reference, by name.
+    /// The templates `resources` reference, by name as written.
     pub templates: BTreeMap<String, String>,
+    /// Every file under the recipe's own `templates/`, as sorted
+    /// `/`-separated paths relative to it.
+    pub template_files: Vec<String>,
     /// Referenced templates that don't exist.
     pub missing_templates: Vec<String>,
-    /// Referenced template paths that aren't plain paths under `templates/`.
+    /// Referenced template paths that aren't plain relative paths.
     pub invalid_templates: Vec<String>,
     /// Text of `locales/en.json`, if present.
     pub source_locale: Option<String>,
@@ -106,6 +119,17 @@ impl Recipe {
     pub fn locales_dir(&self, root: &Path) -> PathBuf {
         root.join(&self.path).join("locales")
     }
+
+    /// Where a template name points, relative to the repository root, for
+    /// messages: `shared/<path>` or `recipes/<tier>/<id>/templates/<path>`.
+    #[must_use]
+    pub fn template_display_path(&self, name: &str) -> String {
+        if name.starts_with(SHARED_PREFIX) {
+            name.to_owned()
+        } else {
+            format!("{}/templates/{name}", self.path)
+        }
+    }
 }
 
 impl Repo {
@@ -113,12 +137,8 @@ impl Repo {
         let root = root.into();
         let catalog = read_yaml(&root.join("catalog.yaml"))?;
         let (catalog_source_locale, catalog_locales) = read_locales(&root.join("locales"))?;
-        let templates_dir = root.join("templates");
-        let mut template_files = Vec::new();
-        if templates_dir.is_dir() {
-            walk(&templates_dir, "", &mut template_files)?;
-        }
-        template_files.sort();
+        let shared_files = list_files(&root.join("shared"))?;
+        let legacy_templates_dir = root.join("templates").is_dir();
 
         let recipes_dir = root.join("recipes");
         let mut recipes = Vec::new();
@@ -140,7 +160,8 @@ impl Repo {
             catalog_source_locale,
             catalog_locales,
             recipes,
-            template_files,
+            shared_files,
+            legacy_templates_dir,
             stray_dirs,
         })
     }
@@ -171,16 +192,20 @@ impl Recipe {
                 invalid_templates.push(name.to_owned());
                 continue;
             }
-            let file = root.join("templates").join(name);
+            let file = name.strip_prefix(SHARED_PREFIX).map_or_else(
+                || dir.join("templates").join(name),
+                |shared| root.join("shared").join(shared),
+            );
             if file.is_file() {
                 let body = fs::read_to_string(&file)
-                    .with_context(|| format!("failed to read templates/{name}"))?;
+                    .with_context(|| format!("failed to read {}", file.display()))?;
                 templates.insert(name.to_owned(), body);
             } else {
                 missing_templates.push(name.to_owned());
             }
         }
 
+        let template_files = list_files(&dir.join("templates"))?;
         let (source_locale, locales) = read_locales(&dir.join("locales"))?;
         Ok(Self {
             tier,
@@ -189,6 +214,7 @@ impl Recipe {
             yaml,
             doc,
             templates,
+            template_files,
             missing_templates,
             invalid_templates,
             source_locale,
@@ -259,6 +285,17 @@ fn subdirs(dir: &Path) -> Result<Vec<String>> {
     }
     names.sort();
     Ok(names)
+}
+
+/// Every file under `dir`, as sorted `/`-separated relative paths; none if
+/// it doesn't exist.
+fn list_files(dir: &Path) -> Result<Vec<String>> {
+    let mut files = Vec::new();
+    if dir.is_dir() {
+        walk(dir, "", &mut files)?;
+    }
+    files.sort();
+    Ok(files)
 }
 
 fn walk(dir: &Path, prefix: &str, files: &mut Vec<String>) -> Result<()> {

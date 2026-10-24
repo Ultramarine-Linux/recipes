@@ -17,8 +17,9 @@ cargo run -p recipes -- check     # everything CI and the origin enforce
 cargo run -p recipes -- build     # check, then write dist/v1/
 ```
 
-Recipes live in `recipes/official/<id>/` or `recipes/community/<id>/`, with
-shared Tera templates in `templates/`.
+Each recipe lives in `recipes/official/<id>/` or `recipes/community/<id>/`,
+with its Tera templates in its own `templates/`. Image-free templates that
+several recipes use (volumes, networks) are in `shared/`.
 
 ## Documentation
 

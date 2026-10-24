@@ -96,7 +96,7 @@
 				"template": {
 					"type": "string",
 					"pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+\\.tera$",
-					"description": "Path under templates/."
+					"description": "A file in the recipe's own templates/, or shared/<path> for the top-level shared/."
 				},
 				"condition": { "type": "string" },
 				"depends_on": { "type": "array", "items": { "type": "string" } }

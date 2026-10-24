@@ -12,5 +12,5 @@ description: "What the official and community recipe tiers mean and how they're 
   it needs, but Fyra Labs doesn't maintain them. They're installed as
   tetra's `community` catalog.
 
-Both tiers share `templates/` and the same checks. A recipe id can only be
-used once across both.
+Both tiers can use `shared/` and go through the same checks. A recipe id can
+only be used once across both.

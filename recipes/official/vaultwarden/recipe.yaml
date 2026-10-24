@@ -4,7 +4,7 @@ name: Vaultwarden
 description: Self-host a Bitwarden-compatible password manager. Needs HTTPS for the web vault.
 category: security
 icon: vaultwarden
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -73,7 +73,7 @@ parameters:
 resources:
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/vaultwarden.container.tera
+    template: vaultwarden.container.tera

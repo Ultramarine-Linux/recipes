@@ -4,7 +4,7 @@ name: Paperless-ngx
 description: Scan, OCR, and search your paper documents, with PostgreSQL and Valkey.
 category: productivity
 icon: paperlessngx
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -73,28 +73,28 @@ parameters:
 resources:
   - type: network
     filename: "{{ app_id }}-net.network"
-    template: networks/bridge.network.tera
+    template: shared/bridge.network.tera
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-media.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-consume.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-export.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-db.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}-db.container"
-    template: containers/postgres.container.tera
+    template: postgres.container.tera
   - type: container
     filename: "{{ app_id }}-valkey.container"
-    template: containers/valkey.container.tera
+    template: valkey.container.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/paperless-ngx.container.tera
+    template: paperless-ngx.container.tera

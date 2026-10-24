@@ -4,7 +4,7 @@ name: Miniflux
 description: A minimalist, fast RSS and Atom feed reader backed by PostgreSQL.
 category: productivity
 icon: miniflux
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -62,13 +62,13 @@ parameters:
 resources:
   - type: network
     filename: "{{ app_id }}-net.network"
-    template: networks/bridge.network.tera
+    template: shared/bridge.network.tera
   - type: volume
     filename: "{{ app_id }}-db.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}-db.container"
-    template: containers/postgres.container.tera
+    template: postgres.container.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/miniflux.container.tera
+    template: miniflux.container.tera

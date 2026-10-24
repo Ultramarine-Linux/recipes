@@ -4,7 +4,7 @@ name: Immich
 description: Back up and browse your photos and videos, with face and object search.
 category: media
 icon: immich
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -49,27 +49,27 @@ parameters:
 resources:
   - type: network
     filename: "{{ app_id }}-net.network"
-    template: networks/bridge.network.tera
+    template: shared/bridge.network.tera
   - type: volume
     filename: "{{ app_id }}-library.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-db.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-model-cache.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
     condition: "enable_machine_learning == true"
   - type: container
     filename: "{{ app_id }}-db.container"
-    template: containers/immich-postgres.container.tera
+    template: postgres.container.tera
   - type: container
     filename: "{{ app_id }}-valkey.container"
-    template: containers/valkey.container.tera
+    template: valkey.container.tera
   - type: container
     filename: "{{ app_id }}-ml.container"
-    template: containers/immich-ml.container.tera
+    template: machine-learning.container.tera
     condition: "enable_machine_learning == true"
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/immich-server.container.tera
+    template: immich.container.tera

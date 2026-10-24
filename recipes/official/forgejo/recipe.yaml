@@ -4,7 +4,7 @@ name: Forgejo
 description: Host Git repositories, issues, and pull requests with Forgejo and PostgreSQL.
 category: development
 icon: forgejo
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -64,16 +64,16 @@ parameters:
 resources:
   - type: network
     filename: "{{ app_id }}-net.network"
-    template: networks/bridge.network.tera
+    template: shared/bridge.network.tera
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-db.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}-db.container"
-    template: containers/postgres.container.tera
+    template: postgres.container.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/forgejo.container.tera
+    template: forgejo.container.tera

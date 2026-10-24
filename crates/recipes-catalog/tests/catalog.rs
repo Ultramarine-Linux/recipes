@@ -44,10 +44,10 @@ parameters:
 resources:
   - type: container
     filename: \"{{{{ app_id }}}}.container\"
-    template: containers/app.container.tera
+    template: app.container.tera
   - type: file
     filename: index.html
-    template: files/index.html.tera
+    template: shared/index.html.tera
 "
     )
 }
@@ -70,16 +70,14 @@ fn fixture() -> TempDir {
         "catalog.yaml",
         "name: Test catalog\ncategories:\n  apps:\n    name: Apps\n",
     );
-    write(
-        root,
-        "templates/containers/app.container.tera",
-        &format!("[Container]\nContainerName={{{{ app_id }}}}\nImage={IMAGE}\n"),
-    );
-    write(
-        root,
-        "templates/files/index.html.tera",
-        "<h1>{{ name }}</h1>\n",
-    );
+    for id in ["official/zeta", "community/alpha"] {
+        write(
+            root,
+            &format!("recipes/{id}/templates/app.container.tera"),
+            &format!("[Container]\nContainerName={{{{ app_id }}}}\nImage={IMAGE}\n"),
+        );
+    }
+    write(root, "shared/index.html.tera", "<h1>{{ name }}</h1>\n");
     write(
         root,
         "recipes/official/zeta/recipe.yaml",
@@ -263,7 +261,7 @@ fn builds_the_documented_format() {
     assert_eq!(bundle["recipe"], recipe_yaml("zeta"));
     assert_eq!(
         keys(&bundle["templates"]),
-        ["containers/app.container.tera", "files/index.html.tera"]
+        ["app.container.tera", "shared/index.html.tera"]
     );
     let templates: BTreeMap<String, String> =
         serde_json::from_value(bundle["templates"].clone()).unwrap();
@@ -369,12 +367,12 @@ fn unpinned_image() {
     let dir = fixture();
     write(
         dir.path(),
-        "templates/containers/app.container.tera",
+        "recipes/official/zeta/templates/app.container.tera",
         "[Container]\nImage=docker.io/library/nginx:latest\n",
     );
     assert_error(
         dir.path(),
-        "templates/containers/app.container.tera: image `docker.io/library/nginx:latest` must use @sha256:<64 hex>",
+        "recipes/official/zeta/templates/app.container.tera: image `docker.io/library/nginx:latest` must use @sha256:<64 hex>",
     );
 }
 
@@ -383,7 +381,7 @@ fn image_policy_covers_service_commands() {
     let dir = fixture();
     write(
         dir.path(),
-        "templates/containers/app.container.tera",
+        "recipes/official/zeta/templates/app.container.tera",
         &format!("[Container]\nImage={IMAGE}\n\n[Service]\nExecStartPre=podman pull evil\n"),
     );
     assert_error(dir.path(), "`ExecStartPre=` commands are unsupported");
@@ -393,22 +391,67 @@ fn image_policy_covers_service_commands() {
 fn missing_and_unused_templates() {
     let dir = fixture();
     fs::rename(
-        dir.path().join("templates/files/index.html.tera"),
-        dir.path().join("templates/files/other.html.tera"),
+        dir.path().join("shared/index.html.tera"),
+        dir.path().join("shared/other.html.tera"),
+    )
+    .unwrap();
+    write(
+        dir.path(),
+        "recipes/official/zeta/templates/extra.container.tera",
+        &format!("[Container]\nImage={IMAGE}\n"),
+    );
+    assert_error(
+        dir.path(),
+        "recipes/official/zeta: template `shared/index.html.tera` does not exist",
+    );
+    assert_error(
+        dir.path(),
+        "recipes/community/alpha: template `shared/index.html.tera` does not exist",
+    );
+    assert_error(
+        dir.path(),
+        "shared/other.html.tera is not used by any recipe",
+    );
+    assert_error(
+        dir.path(),
+        "recipes/official/zeta/templates/extra.container.tera is not used by the recipe",
+    );
+}
+
+#[test]
+fn recipe_templates_are_its_own() {
+    let dir = fixture();
+    // alpha can't reach zeta's templates: names resolve in its own directory.
+    fs::remove_file(
+        dir.path()
+            .join("recipes/community/alpha/templates/app.container.tera"),
     )
     .unwrap();
     assert_error(
         dir.path(),
-        "recipes/official/zeta: template `files/index.html.tera` does not exist",
+        "recipes/community/alpha: template `app.container.tera` does not exist (recipes/community/alpha/templates/app.container.tera)",
+    );
+}
+
+#[test]
+fn shared_templates_cant_set_images() {
+    let dir = fixture();
+    write(
+        dir.path(),
+        "shared/index.html.tera",
+        &format!("Image={IMAGE}\n"),
     );
     assert_error(
         dir.path(),
-        "recipes/community/alpha: template `files/index.html.tera` does not exist",
+        "shared/index.html.tera: shared templates can't set `Image=`",
     );
-    assert_error(
-        dir.path(),
-        "templates/files/other.html.tera is not used by any recipe",
-    );
+}
+
+#[test]
+fn old_templates_dir_is_rejected() {
+    let dir = fixture();
+    write(dir.path(), "templates/containers/app.container.tera", "");
+    assert_error(dir.path(), "templates/: templates now live in");
 }
 
 #[test]
@@ -418,13 +461,13 @@ fn template_paths_stay_in_templates() {
     write(
         dir.path(),
         "recipes/official/zeta/recipe.yaml",
-        &recipe_yaml("zeta").replace("files/index.html.tera", "files/../../secret.tera"),
+        &recipe_yaml("zeta").replace("shared/index.html.tera", "shared/../../secret.tera"),
     );
     let errors = errors(dir.path());
     assert!(
         errors
             .iter()
-            .any(|error| error.contains("must be a relative path under templates/")),
+            .any(|error| error.contains("must be a relative path in the recipe's templates/")),
         "{errors:#?}"
     );
     // The schema rejects it too.
@@ -439,12 +482,13 @@ fn template_paths_stay_in_templates() {
 #[test]
 fn quadlet_templates_are_named_after_their_type() {
     let dir = fixture();
-    fs::rename(
-        dir.path().join("templates/containers/app.container.tera"),
-        dir.path().join("templates/containers/app.tera"),
-    )
-    .unwrap();
     for id in ["official/zeta", "community/alpha"] {
+        fs::rename(
+            dir.path()
+                .join(format!("recipes/{id}/templates/app.container.tera")),
+            dir.path().join(format!("recipes/{id}/templates/app.tera")),
+        )
+        .unwrap();
         let path = format!("recipes/{id}/recipe.yaml");
         let yaml = fs::read_to_string(dir.path().join(&path)).unwrap();
         write(
@@ -455,7 +499,7 @@ fn quadlet_templates_are_named_after_their_type() {
     }
     assert_error(
         dir.path(),
-        "recipes/official/zeta: template `containers/app.tera` of a container resource must be named `*.container.tera`",
+        "recipes/official/zeta: template `app.tera` of a container resource must be named `*.container.tera`",
     );
 }
 
@@ -584,7 +628,7 @@ fn renders_with_sample_values() {
     let dir = fixture();
     write(
         dir.path(),
-        "templates/files/index.html.tera",
+        "shared/index.html.tera",
         "{{ undefined_thing }}\n",
     );
     assert_error(
@@ -605,7 +649,7 @@ fn changed_bundles_need_a_version_bump() {
 
     write(
         dir.path(),
-        "templates/files/index.html.tera",
+        "shared/index.html.tera",
         "<h2>{{ name }}</h2>\n",
     );
     let errors = check(&load(dir.path()), &options).unwrap().errors;

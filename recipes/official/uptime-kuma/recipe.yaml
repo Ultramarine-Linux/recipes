@@ -4,7 +4,7 @@ name: Uptime Kuma
 description: Monitor websites and services and get notified when they go down.
 category: monitoring
 icon: uptimekuma
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -24,7 +24,7 @@ parameters:
 resources:
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/uptime-kuma.container.tera
+    template: uptime-kuma.container.tera

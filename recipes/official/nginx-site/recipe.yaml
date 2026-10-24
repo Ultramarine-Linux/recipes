@@ -4,7 +4,7 @@ name: Nginx static site
 description: Serve static files with nginx using a Quadlet-managed container.
 category: web
 icon: nginx
-version: 0.2.1
+version: 0.2.2
 requires:
   - podman
   - quadlets
@@ -40,10 +40,10 @@ parameters:
 resources:
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/nginx-site.container.tera
+    template: nginx-site.container.tera
   - type: file
     filename: site/index.html
-    template: files/nginx-index.html.tera
+    template: index.html.tera
   - type: file
     filename: conf/default.conf
-    template: files/nginx-default.conf.tera
+    template: default.conf.tera

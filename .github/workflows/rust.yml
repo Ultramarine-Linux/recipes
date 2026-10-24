@@ -14,7 +14,7 @@ on:
       - locales/**
       - recipes/**
       - schema/**
-      - templates/**
+      - shared/**
       - .github/workflows/rust.yml
   pull_request:
     paths: *paths

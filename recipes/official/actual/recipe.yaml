@@ -4,7 +4,7 @@ name: Actual Budget
 description: Local-first personal budgeting with sync across your devices. Needs HTTPS.
 category: productivity
 icon: actualbudget
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -24,7 +24,7 @@ parameters:
 resources:
   - type: volume
     filename: "{{ app_id }}-data.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/actual.container.tera
+    template: actual.container.tera

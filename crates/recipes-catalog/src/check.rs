@@ -15,9 +15,12 @@
 //! - recipes live in `recipes/<tier>/<recipe_id>/`, ids are unique across
 //!   tiers, and categories are defined in `catalog.yaml`
 //! - parameter fields only appear on the types that use them
-//! - every referenced template is a path under `templates/` that exists,
-//!   Quadlet templates are named after their unit type, and every template
-//!   is used by some recipe
+//! - every referenced template exists (in the recipe's `templates/`, or in
+//!   `shared/` for `shared/...` names), Quadlet templates are named after
+//!   their unit type, every recipe template is used by its recipe, and every
+//!   shared template by some recipe
+//! - shared templates don't set an image: anything with an image pin belongs
+//!   to one recipe, so bumping it never changes another recipe
 //! - every `en.json` is up to date with the YAML, and translations only hold
 //!   strings under keys from it
 //! - optionally, a recipe whose bundle changed since the last publish must
@@ -41,7 +44,7 @@ use tetra_recipe::{
 use crate::{
     json,
     locales::{catalog_source, flatten, is_blank, recipe_source},
-    repo::{Locales, Recipe, Repo, SOURCE_LOCALE, Tier},
+    repo::{Locales, Recipe, Repo, SHARED_PREFIX, SOURCE_LOCALE, Tier},
 };
 
 /// The command that regenerates `en.json` files.
@@ -108,11 +111,38 @@ pub fn check(repo: &Repo, options: &CheckOptions) -> Result<Report> {
         ));
     }
 
-    let mut referenced = BTreeMap::new();
+    if repo.legacy_templates_dir {
+        report.error(
+            "templates/: templates now live in recipes/<tier>/<id>/templates/, or shared/ for image-free ones",
+        );
+    }
+
+    // Keyed by display path, so a shared template is checked once.
+    let mut referenced: BTreeMap<String, &String> = BTreeMap::new();
     let mut seen: BTreeMap<&str, &str> = BTreeMap::new();
     let mut digests = BTreeMap::new();
     for recipe in &repo.recipes {
-        referenced.extend(recipe.templates.iter());
+        for (name, body) in &recipe.templates {
+            referenced.insert(recipe.template_display_path(name), body);
+        }
+        for name in &recipe.template_files {
+            if !recipe.templates.contains_key(name) {
+                report.error(format!(
+                    "{}/templates/{name} is not used by the recipe",
+                    recipe.path
+                ));
+            }
+        }
+        if recipe
+            .template_files
+            .iter()
+            .any(|name| name.starts_with(SHARED_PREFIX))
+        {
+            report.error(format!(
+                "{}/templates/shared/: `shared/...` names refer to the top-level shared/; rename the directory",
+                recipe.path
+            ));
+        }
         if let Some(first) = seen.insert(&recipe.dir_name, &recipe.path) {
             report.error(format!(
                 "{}: recipe id is already used by {first}",
@@ -124,12 +154,16 @@ pub fn check(repo: &Repo, options: &CheckOptions) -> Result<Report> {
         }
     }
 
-    for (name, body) in &referenced {
-        check_template_images(&mut report, name, body);
+    for (path, body) in &referenced {
+        if path.starts_with(SHARED_PREFIX) {
+            check_shared_has_no_image(&mut report, path, body);
+        } else {
+            check_template_images(&mut report, path, body);
+        }
     }
-    for name in &repo.template_files {
-        if !referenced.contains_key(name) {
-            report.error(format!("templates/{name} is not used by any recipe"));
+    for name in &repo.shared_files {
+        if !referenced.contains_key(&format!("{SHARED_PREFIX}{name}")) {
+            report.error(format!("{SHARED_PREFIX}{name} is not used by any recipe"));
         }
     }
 
@@ -167,11 +201,14 @@ fn check_recipe(
 
     for name in &recipe.invalid_templates {
         report.error(format!(
-            "{at}: template `{name}` must be a relative path under templates/ (no `.`, `..` or empty segments)"
+            "{at}: template `{name}` must be a relative path in the recipe's templates/ or shared/ (no `.`, `..` or empty segments)"
         ));
     }
     for name in &recipe.missing_templates {
-        report.error(format!("{at}: template `{name}` does not exist"));
+        report.error(format!(
+            "{at}: template `{name}` does not exist ({})",
+            recipe.template_display_path(name)
+        ));
     }
 
     let source = recipe_source(&recipe.doc);
@@ -266,8 +303,8 @@ fn check_resources(report: &mut Report, at: &str, recipe: &AppRecipe) {
 /// Tetra's pinned image policy, on the template text: image lines are
 /// literal in templates, so this covers every resource whatever the
 /// parameters. The unit type comes from the file name (`x.container.tera`).
-fn check_template_images(report: &mut Report, name: &str, body: &str) {
-    let filename = name.rsplit('/').next().unwrap_or(name);
+fn check_template_images(report: &mut Report, path: &str, body: &str) {
+    let filename = path.rsplit('/').next().unwrap_or(path);
     let resource = RenderedResource {
         kind: ResourceKind::File,
         filename: filename
@@ -277,7 +314,21 @@ fn check_template_images(report: &mut Report, name: &str, body: &str) {
         contents: body.to_owned(),
     };
     if let Err(error) = verify_images(&[resource], false, None) {
-        report.error(format!("templates/{name}: {error:#}"));
+        report.error(format!("{path}: {error:#}"));
+    }
+}
+
+/// Shared templates stay image-free: an image pin belongs to one recipe.
+fn check_shared_has_no_image(report: &mut Report, path: &str, body: &str) {
+    let sets_image = body.lines().any(|line| {
+        line.trim_start()
+            .split_once('=')
+            .is_some_and(|(key, _)| key.trim() == "Image")
+    });
+    if sets_image {
+        report.error(format!(
+            "{path}: shared templates can't set `Image=`; give each recipe its own copy"
+        ));
     }
 }
 

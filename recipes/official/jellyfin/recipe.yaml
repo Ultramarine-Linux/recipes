@@ -4,7 +4,7 @@ name: Jellyfin
 description: Stream your movies, shows, and music to any device.
 category: media
 icon: jellyfin
-version: 0.1.0
+version: 0.1.1
 requires:
   - podman
   - quadlets
@@ -24,13 +24,13 @@ parameters:
 resources:
   - type: volume
     filename: "{{ app_id }}-config.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-cache.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: volume
     filename: "{{ app_id }}-media.volume"
-    template: volumes/named.volume.tera
+    template: shared/named.volume.tera
   - type: container
     filename: "{{ app_id }}.container"
-    template: containers/jellyfin.container.tera
+    template: jellyfin.container.tera
