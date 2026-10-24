@@ -1,0 +1,28 @@
+[Unit]
+Description={{ name }}
+Requires={{ app_id }}-db.service
+After={{ app_id }}-db.service
+
+[Container]
+ContainerName={{ app_id }}
+Image=codeberg.org/forgejo/forgejo:17.0.0@sha256:06d38310de496a10186d952bdad5ca764c153c8023ede8dfa0944c79a1dc5412
+Network={{ app_id }}-net.network
+Volume={{ app_id }}-data.volume:/data
+Environment=FORGEJO__database__DB_TYPE=postgres
+Environment=FORGEJO__database__HOST={{ app_id }}-db:5432
+Environment={{ ("FORGEJO__database__NAME=" ~ database_name) | systemd_quote }}
+Environment={{ ("FORGEJO__database__USER=" ~ database_user) | systemd_quote }}
+Environment={{ ("FORGEJO__database__PASSWD=" ~ db_password) | systemd_quote }}
+Environment={{ ("FORGEJO__server__DOMAIN=" ~ domain) | systemd_quote }}
+Environment={{ ("FORGEJO__server__SSH_DOMAIN=" ~ domain) | systemd_quote }}
+Environment={{ ("FORGEJO__server__ROOT_URL=" ~ public_protocol ~ "://" ~ domain ~ "/") | systemd_quote }}
+Environment=FORGEJO__server__SSH_PORT={{ ssh_port }}
+Environment=FORGEJO__service__DISABLE_REGISTRATION={{ disable_registration }}
+PublishPort={{ host_port }}:3000
+PublishPort={{ ssh_port }}:22
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

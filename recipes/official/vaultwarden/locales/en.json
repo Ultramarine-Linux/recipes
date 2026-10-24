@@ -1,0 +1,44 @@
+{
+	"name": "Vaultwarden",
+	"description": "Self-host a Bitwarden-compatible password manager. Needs HTTPS for the web vault.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"domain": {
+			"label": "Domain"
+		},
+		"public_protocol": {
+			"label": "Public protocol",
+			"options": {
+				"https": "https",
+				"http": "http"
+			}
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"allow_signups": {
+			"label": "Allow new sign-ups"
+		},
+		"enable_admin_panel": {
+			"label": "Enable admin panel"
+		},
+		"admin_token": {
+			"label": "Admin panel token"
+		},
+		"enable_sso": {
+			"label": "Enable single sign-on (OIDC)"
+		},
+		"sso_authority": {
+			"label": "OIDC issuer URL",
+			"placeholder": "https://auth.example.com"
+		},
+		"sso_client_id": {
+			"label": "OIDC client ID"
+		},
+		"sso_client_secret": {
+			"label": "OIDC client secret"
+		}
+	}
+}

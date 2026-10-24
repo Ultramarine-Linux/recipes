@@ -1,0 +1,44 @@
+{
+	"name": "Paperless-ngx",
+	"description": "Scan, OCR, and search your paper documents, with PostgreSQL and Valkey.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"domain": {
+			"label": "Domain"
+		},
+		"public_protocol": {
+			"label": "Public protocol",
+			"options": {
+				"https": "https",
+				"http": "http"
+			}
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"admin_user": {
+			"label": "Admin user"
+		},
+		"admin_password": {
+			"label": "Admin password"
+		},
+		"database_name": {
+			"label": "Database name"
+		},
+		"database_user": {
+			"label": "Database user"
+		},
+		"db_password": {
+			"label": "Database password"
+		},
+		"secret_key": {
+			"label": "Secret key"
+		},
+		"ocr_language": {
+			"label": "OCR language",
+			"placeholder": "eng, deu, fra, ..."
+		}
+	}
+}

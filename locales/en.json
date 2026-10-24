@@ -1,6 +1,12 @@
 {
 	"categories": {
 		"apps": "Apps",
-		"web": "Web"
+		"web": "Web",
+		"media": "Media",
+		"productivity": "Productivity",
+		"files": "Files",
+		"development": "Development",
+		"monitoring": "Monitoring",
+		"security": "Security"
 	}
 }

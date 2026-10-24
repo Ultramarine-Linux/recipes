@@ -1,0 +1,75 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: immich
+name: Immich
+description: Back up and browse your photos and videos, with face and object search.
+category: media
+icon: immich
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: immich
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 2283
+    min: 1024
+    max: 65535
+  - key: database_name
+    label: Database name
+    type: string
+    required: true
+    default: immich
+  - key: database_user
+    label: Database user
+    type: string
+    required: true
+    default: immich
+  - key: db_password
+    label: Database password
+    type: secret
+    required: true
+    generate: random_32
+  - key: enable_machine_learning
+    label: Enable machine learning (search, faces)
+    type: boolean
+    required: true
+    default: true
+  - key: database_on_hdd
+    label: Database is on a hard drive
+    type: boolean
+    required: true
+    default: false
+resources:
+  - type: network
+    filename: "{{ app_id }}-net.network"
+    template: networks/bridge.network.tera
+  - type: volume
+    filename: "{{ app_id }}-library.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-db.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-model-cache.volume"
+    template: volumes/named.volume.tera
+    condition: "enable_machine_learning == true"
+  - type: container
+    filename: "{{ app_id }}-db.container"
+    template: containers/immich-postgres.container.tera
+  - type: container
+    filename: "{{ app_id }}-valkey.container"
+    template: containers/valkey.container.tera
+  - type: container
+    filename: "{{ app_id }}-ml.container"
+    template: containers/immich-ml.container.tera
+    condition: "enable_machine_learning == true"
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/immich-server.container.tera

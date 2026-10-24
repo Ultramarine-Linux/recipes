@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: vaultwarden
+name: Vaultwarden
+description: Self-host a Bitwarden-compatible password manager. Needs HTTPS for the web vault.
+category: security
+icon: vaultwarden
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: vaultwarden
+  - key: domain
+    label: Domain
+    type: string
+    required: true
+    default: vault.example.com
+  - key: public_protocol
+    label: Public protocol
+    type: choice
+    required: true
+    default: https
+    options:
+      - https
+      - http
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8082
+    min: 1024
+    max: 65535
+  - key: allow_signups
+    label: Allow new sign-ups
+    type: boolean
+    required: true
+    default: true
+  - key: enable_admin_panel
+    label: Enable admin panel
+    type: boolean
+    required: true
+    default: false
+  - key: admin_token
+    label: Admin panel token
+    type: secret
+    required: true
+    generate: random_32
+  - key: enable_sso
+    label: Enable single sign-on (OIDC)
+    type: boolean
+    required: true
+    default: false
+  - key: sso_authority
+    label: OIDC issuer URL
+    type: string
+    required: false
+    default: ""
+    placeholder: https://auth.example.com
+  - key: sso_client_id
+    label: OIDC client ID
+    type: string
+    required: false
+    default: ""
+  - key: sso_client_secret
+    label: OIDC client secret
+    type: secret
+    required: false
+    default: ""
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/vaultwarden.container.tera

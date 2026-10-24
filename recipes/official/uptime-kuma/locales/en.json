@@ -1,0 +1,12 @@
+{
+	"name": "Uptime Kuma",
+	"description": "Monitor websites and services and get notified when they go down.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		}
+	}
+}

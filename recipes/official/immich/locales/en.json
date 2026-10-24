@@ -1,0 +1,27 @@
+{
+	"name": "Immich",
+	"description": "Back up and browse your photos and videos, with face and object search.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"database_name": {
+			"label": "Database name"
+		},
+		"database_user": {
+			"label": "Database user"
+		},
+		"db_password": {
+			"label": "Database password"
+		},
+		"enable_machine_learning": {
+			"label": "Enable machine learning (search, faces)"
+		},
+		"database_on_hdd": {
+			"label": "Database is on a hard drive"
+		}
+	}
+}

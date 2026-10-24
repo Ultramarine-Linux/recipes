@@ -1,0 +1,25 @@
+[Unit]
+Description={{ name }} database
+
+[Container]
+ContainerName={{ app_id }}-db
+# Immich's own Postgres build with VectorChord; plain postgres won't do.
+Image=ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+Network={{ app_id }}-net.network
+Volume={{ app_id }}-db.volume:/var/lib/postgresql/data
+ShmSize=128m
+Environment={{ ("POSTGRES_DB=" ~ database_name) | systemd_quote }}
+Environment={{ ("POSTGRES_USER=" ~ database_user) | systemd_quote }}
+Environment={{ ("POSTGRES_PASSWORD=" ~ db_password) | systemd_quote }}
+Environment=POSTGRES_INITDB_ARGS=--data-checksums
+{% if database_on_hdd %}Environment=DB_STORAGE_TYPE=HDD
+{% endif %}HealthCmd=pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+HealthInterval=10s
+HealthStartPeriod=30s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

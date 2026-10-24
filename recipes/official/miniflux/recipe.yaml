@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: miniflux
+name: Miniflux
+description: A minimalist, fast RSS and Atom feed reader backed by PostgreSQL.
+category: productivity
+icon: miniflux
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: miniflux
+  - key: domain
+    label: Domain
+    type: string
+    required: true
+    default: rss.example.com
+  - key: public_protocol
+    label: Public protocol
+    type: choice
+    required: true
+    default: https
+    options:
+      - https
+      - http
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8083
+    min: 1024
+    max: 65535
+  - key: admin_user
+    label: Admin user
+    type: string
+    required: true
+    default: admin
+  - key: admin_password
+    label: Admin password
+    type: secret
+    required: true
+    generate: random_32
+  - key: database_name
+    label: Database name
+    type: string
+    required: true
+    default: miniflux
+  - key: database_user
+    label: Database user
+    type: string
+    required: true
+    default: miniflux
+  - key: db_password
+    label: Database password
+    type: secret
+    required: true
+    generate: random_32
+resources:
+  - type: network
+    filename: "{{ app_id }}-net.network"
+    template: networks/bridge.network.tera
+  - type: volume
+    filename: "{{ app_id }}-db.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}-db.container"
+    template: containers/postgres.container.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/miniflux.container.tera

@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }} Valkey cache
+
+[Container]
+ContainerName={{ app_id }}-valkey
+Image=docker.io/valkey/valkey:9-alpine@sha256:48332870af354a799964c0012ae1194a0bf2bf894eb508f945810596dc2d8d11
+Network={{ app_id }}-net.network
+HealthCmd=valkey-cli ping
+HealthInterval=10s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

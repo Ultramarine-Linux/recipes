@@ -1,0 +1,12 @@
+{
+	"name": "Actual Budget",
+	"description": "Local-first personal budgeting with sync across your devices. Needs HTTPS.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		}
+	}
+}

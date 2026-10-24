@@ -1,0 +1,37 @@
+{
+	"name": "Forgejo",
+	"description": "Host Git repositories, issues, and pull requests with Forgejo and PostgreSQL.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"domain": {
+			"label": "Domain"
+		},
+		"public_protocol": {
+			"label": "Public protocol",
+			"options": {
+				"https": "https",
+				"http": "http"
+			}
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"ssh_port": {
+			"label": "SSH port"
+		},
+		"database_name": {
+			"label": "Database name"
+		},
+		"database_user": {
+			"label": "Database user"
+		},
+		"db_password": {
+			"label": "Database password"
+		},
+		"disable_registration": {
+			"label": "Disable open registration"
+		}
+	}
+}

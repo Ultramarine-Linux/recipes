@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }} machine learning
+
+[Container]
+ContainerName={{ app_id }}-ml
+Image=ghcr.io/immich-app/immich-machine-learning:v3.3.5@sha256:5b28c9352c8374b8a1ed96fbdd8d6755fea6e43510ec43fdf6538aa02ea40f56
+Network={{ app_id }}-net.network
+# Immich's default machine learning URL is http://immich-machine-learning:3003.
+NetworkAlias=immich-machine-learning
+Volume={{ app_id }}-model-cache.volume:/cache
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

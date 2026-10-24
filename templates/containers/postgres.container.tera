@@ -1,0 +1,23 @@
+[Unit]
+Description={{ name }} database
+
+[Container]
+ContainerName={{ app_id }}-db
+Image=docker.io/library/postgres:18@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+Network={{ app_id }}-net.network
+Volume={{ app_id }}-db.volume:/var/lib/postgresql
+Environment={{ ("POSTGRES_DB=" ~ database_name) | systemd_quote }}
+Environment={{ ("POSTGRES_USER=" ~ database_user) | systemd_quote }}
+Environment={{ ("POSTGRES_PASSWORD=" ~ db_password) | systemd_quote }}
+# The entrypoint's init server only listens on the socket, so this passes once
+# the real server is up. Notify=healthy holds dependents until then.
+HealthCmd=pg_isready -h 127.0.0.1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+HealthInterval=10s
+HealthStartPeriod=30s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

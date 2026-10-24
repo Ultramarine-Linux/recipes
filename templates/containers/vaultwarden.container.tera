@@ -1,0 +1,21 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/vaultwarden/server:1.37.4@sha256:efb3cde962015fcc036b2ea625242248611943b27212ebf4392841fb30fad055
+Volume={{ app_id }}-data.volume:/data
+Environment={{ ("DOMAIN=" ~ public_protocol ~ "://" ~ domain) | systemd_quote }}
+Environment=SIGNUPS_ALLOWED={{ allow_signups }}
+{% if enable_admin_panel %}Environment={{ ("ADMIN_TOKEN=" ~ admin_token) | systemd_quote }}
+{% endif %}{% if enable_sso and sso_authority and sso_client_id and sso_client_secret %}Environment=SSO_ENABLED=true
+Environment={{ ("SSO_AUTHORITY=" ~ sso_authority) | systemd_quote }}
+Environment={{ ("SSO_CLIENT_ID=" ~ sso_client_id) | systemd_quote }}
+Environment={{ ("SSO_CLIENT_SECRET=" ~ sso_client_secret) | systemd_quote }}
+{% endif %}PublishPort={{ host_port }}:80
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

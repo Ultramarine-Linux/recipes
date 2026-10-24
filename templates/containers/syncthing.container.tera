@@ -1,0 +1,18 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/syncthing/syncthing:2.1.7@sha256:2b71da7c0d0a91a6ae5285ad079226fecc0a365d08b27720e1f7037b018f7546
+HostName={{ app_id }}
+Volume={{ app_id }}-data.volume:/var/syncthing
+PublishPort={{ host_port }}:8384
+PublishPort={{ sync_port }}:22000/tcp
+PublishPort={{ sync_port }}:22000/udp
+{% if enable_local_discovery %}PublishPort=21027:21027/udp
+{% endif %}
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

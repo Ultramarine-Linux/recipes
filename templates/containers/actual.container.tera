@@ -1,0 +1,14 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/actualbudget/actual-server:26.10.0@sha256:24645e971da6bb1a1f953d6859e307a0b29be1e8b4130a35b3220c209b5b860c
+Volume={{ app_id }}-data.volume:/data
+PublishPort={{ host_port }}:5006
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

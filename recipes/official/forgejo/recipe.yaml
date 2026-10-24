@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: forgejo
+name: Forgejo
+description: Host Git repositories, issues, and pull requests with Forgejo and PostgreSQL.
+category: development
+icon: forgejo
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: forgejo
+  - key: domain
+    label: Domain
+    type: string
+    required: true
+    default: git.example.com
+  - key: public_protocol
+    label: Public protocol
+    type: choice
+    required: true
+    default: https
+    options:
+      - https
+      - http
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 3000
+    min: 1024
+    max: 65535
+  - key: ssh_port
+    label: SSH port
+    type: integer
+    required: true
+    default: 2222
+    min: 1024
+    max: 65535
+  - key: database_name
+    label: Database name
+    type: string
+    required: true
+    default: forgejo
+  - key: database_user
+    label: Database user
+    type: string
+    required: true
+    default: forgejo
+  - key: db_password
+    label: Database password
+    type: secret
+    required: true
+    generate: random_32
+  - key: disable_registration
+    label: Disable open registration
+    type: boolean
+    required: true
+    default: false
+resources:
+  - type: network
+    filename: "{{ app_id }}-net.network"
+    template: networks/bridge.network.tera
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-db.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}-db.container"
+    template: containers/postgres.container.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/forgejo.container.tera

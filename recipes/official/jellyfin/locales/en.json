@@ -1,0 +1,12 @@
+{
+	"name": "Jellyfin",
+	"description": "Stream your movies, shows, and music to any device.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		}
+	}
+}

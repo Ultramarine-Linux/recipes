@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/jellyfin/jellyfin:12.3@sha256:2038fe038ab3876a80f6e7b7e0aef6607b032c7dc0c9b3ad3296d0b2eba3bbb5
+Volume={{ app_id }}-config.volume:/config
+Volume={{ app_id }}-cache.volume:/cache
+Volume={{ app_id }}-media.volume:/media
+PublishPort={{ host_port }}:8096
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

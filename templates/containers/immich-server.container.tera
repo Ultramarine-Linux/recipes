@@ -1,0 +1,25 @@
+[Unit]
+Description={{ name }} server
+Requires={{ app_id }}-db.service {{ app_id }}-valkey.service
+After={{ app_id }}-db.service {{ app_id }}-valkey.service
+{% if enable_machine_learning %}Wants={{ app_id }}-ml.service
+After={{ app_id }}-ml.service
+{% endif %}
+[Container]
+ContainerName={{ app_id }}
+Image=ghcr.io/immich-app/immich-server:v3.3.5@sha256:485d546a2e31d6a8b4db8423fcba5c109de8c218d93410af115fd1ccfc4352a6
+Network={{ app_id }}-net.network
+Timezone=local
+Volume={{ app_id }}-library.volume:/data
+Environment=DB_HOSTNAME={{ app_id }}-db
+Environment={{ ("DB_DATABASE_NAME=" ~ database_name) | systemd_quote }}
+Environment={{ ("DB_USERNAME=" ~ database_user) | systemd_quote }}
+Environment={{ ("DB_PASSWORD=" ~ db_password) | systemd_quote }}
+Environment=REDIS_HOSTNAME={{ app_id }}-valkey
+PublishPort={{ host_port }}:2283
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

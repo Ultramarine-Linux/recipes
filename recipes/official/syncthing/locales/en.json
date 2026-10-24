@@ -1,0 +1,18 @@
+{
+	"name": "Syncthing",
+	"description": "Sync files between your devices without a cloud in the middle.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Web UI port"
+		},
+		"sync_port": {
+			"label": "Sync port"
+		},
+		"enable_local_discovery": {
+			"label": "Enable local discovery (UDP 21027)"
+		}
+	}
+}

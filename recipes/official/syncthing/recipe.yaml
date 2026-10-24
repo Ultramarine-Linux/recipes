@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: syncthing
+name: Syncthing
+description: Sync files between your devices without a cloud in the middle.
+category: files
+icon: syncthing
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: syncthing
+  - key: host_port
+    label: Web UI port
+    type: integer
+    required: true
+    default: 8384
+    min: 1024
+    max: 65535
+  - key: sync_port
+    label: Sync port
+    type: integer
+    required: true
+    default: 22000
+    min: 1024
+    max: 65535
+  - key: enable_local_discovery
+    label: Enable local discovery (UDP 21027)
+    type: boolean
+    required: true
+    default: true
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/syncthing.container.tera

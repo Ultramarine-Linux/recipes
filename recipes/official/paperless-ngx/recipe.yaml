@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: paperless-ngx
+name: Paperless-ngx
+description: Scan, OCR, and search your paper documents, with PostgreSQL and Valkey.
+category: productivity
+icon: paperlessngx
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: paperless
+  - key: domain
+    label: Domain
+    type: string
+    required: true
+    default: docs.example.com
+  - key: public_protocol
+    label: Public protocol
+    type: choice
+    required: true
+    default: https
+    options:
+      - https
+      - http
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8000
+    min: 1024
+    max: 65535
+  - key: admin_user
+    label: Admin user
+    type: string
+    required: true
+    default: admin
+  - key: admin_password
+    label: Admin password
+    type: secret
+    required: true
+    generate: random_32
+  - key: database_name
+    label: Database name
+    type: string
+    required: true
+    default: paperless
+  - key: database_user
+    label: Database user
+    type: string
+    required: true
+    default: paperless
+  - key: db_password
+    label: Database password
+    type: secret
+    required: true
+    generate: random_32
+  - key: secret_key
+    label: Secret key
+    type: secret
+    required: true
+    generate: random_32
+  - key: ocr_language
+    label: OCR language
+    type: string
+    required: true
+    default: eng
+    placeholder: eng, deu, fra, ...
+resources:
+  - type: network
+    filename: "{{ app_id }}-net.network"
+    template: networks/bridge.network.tera
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-media.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-consume.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-export.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-db.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}-db.container"
+    template: containers/postgres.container.tera
+  - type: container
+    filename: "{{ app_id }}-valkey.container"
+    template: containers/valkey.container.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/paperless-ngx.container.tera

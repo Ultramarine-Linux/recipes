@@ -7,3 +7,15 @@ categories:
     name: Apps
   web:
     name: Web
+  media:
+    name: Media
+  productivity:
+    name: Productivity
+  files:
+    name: Files
+  development:
+    name: Development
+  monitoring:
+    name: Monitoring
+  security:
+    name: Security

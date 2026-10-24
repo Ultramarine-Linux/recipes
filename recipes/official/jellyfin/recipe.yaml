@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: jellyfin
+name: Jellyfin
+description: Stream your movies, shows, and music to any device.
+category: media
+icon: jellyfin
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: jellyfin
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8096
+    min: 1024
+    max: 65535
+resources:
+  - type: volume
+    filename: "{{ app_id }}-config.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-cache.volume"
+    template: volumes/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-media.volume"
+    template: volumes/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/jellyfin.container.tera
