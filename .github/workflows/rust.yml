@@ -1,13 +1,28 @@
 name: Rust
 permissions:
-    contents: read
+  contents: read
 on:
-    push:
+  # The shared workflow runs pushes from this repository and pull requests
+  # from forks, so both triggers are needed.
+  push:
+    paths: &paths
+      - Cargo.lock
+      - Cargo.toml
+      - crates/**
+      # The tests check this repository's own catalog.
+      - catalog.yaml
+      - locales/**
+      - recipes/**
+      - schema/**
+      - templates/**
+      - .github/workflows/rust.yml
+  pull_request:
+    paths: *paths
 
 jobs:
-    rust:
-        permissions:
-            security-events: write
-            contents: read
-            packages: read
-        uses: FyraLabs/actions/.github/workflows/rust.yml@main
+  rust:
+    permissions:
+      security-events: write
+      contents: read
+      packages: read
+    uses: FyraLabs/actions/.github/workflows/rust.yml@main
