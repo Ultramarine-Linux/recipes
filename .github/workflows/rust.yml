@@ -1,0 +1,13 @@
+name: Rust
+permissions:
+    contents: read
+on:
+    push:
+
+jobs:
+    rust:
+        permissions:
+            security-events: write
+            contents: read
+            packages: read
+        uses: FyraLabs/actions/.github/workflows/rust.yml@main
