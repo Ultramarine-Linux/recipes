@@ -1,0 +1,48 @@
+# Local development stand-in for the production Caddyfile (which lives with
+# the infrastructure config): serves the builder's live release and proxies
+# webhooks to it.
+#
+#   ALLOW_UNSIGNED_WEBHOOKS=1 DATA_DIR=$PWD/.origin PORT=8081 cargo run -p recipes-origin
+#   DATA_DIR=$PWD/.origin caddy run --config origin/Caddyfile.example
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	log
+	encode zstd gzip
+
+	handle /hooks/* {
+		header Cache-Control "no-store"
+		reverse_proxy 127.0.0.1:8081
+	}
+
+	handle /healthz {
+		header Cache-Control "no-store"
+		respond "ok" 200
+	}
+
+	# `current` is a symlink the builder swaps atomically; file_server
+	# resolves it on every request.
+	handle /v1/* {
+		root * {$DATA_DIR:/data}/current
+		header {
+			Access-Control-Allow-Origin *
+			X-Content-Type-Options nosniff
+		}
+		header /v1/index.json Cache-Control "public, max-age=60, s-maxage=300, stale-while-revalidate=3600"
+		header /v1/recipes/* Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	handle {
+		error 404
+	}
+
+	# Don't let a 404 inherit the immutable header above.
+	handle_errors {
+		header Cache-Control "public, max-age=60"
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
+}

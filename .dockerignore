@@ -1,0 +1,5 @@
+# Build context of origin/Containerfile: only Cargo.toml, Cargo.lock and crates/ are used.
+target/
+dist/
+.origin/
+.git/

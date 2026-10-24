@@ -1,0 +1,66 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/Ultramarine-Server/recipes"
+publish = false
+
+[workspace.dependencies]
+recipes-catalog = { path = "crates/recipes-catalog" }
+# Pinned by Cargo.lock; `cargo update -p tetra-recipe` picks up tetra's main.
+tetra-recipe = { git = "https://github.com/Ultramarine-Linux/tetra", branch = "main" }
+
+anyhow = "1"
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio"] }
+clap = { version = "4.5", features = ["derive"] }
+flate2 = "1"
+hex = "0.4"
+hmac = "0.13"
+humantime = "2"
+jsonschema = { version = "0.60", default-features = false }
+reqwest = { version = "0.13", default-features = false, features = ["rustls"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_norway = "0.9"
+sha2 = "0.11"
+tar = { version = "0.4", default-features = false }
+tempfile = "3"
+tokio = { version = "1", features = ["fs", "macros", "net", "rt-multi-thread", "signal", "sync", "time"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+# Same baseline as tetra.
+[workspace.lints.clippy]
+complexity = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+suspicious = { level = "warn", priority = -1 }
+
+clone_on_ref_ptr = "warn"
+create_dir = "warn"
+format_push_string = "warn"
+get_unwrap = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "deny"
+let_underscore_must_use = "deny"
+let_underscore_untyped = "warn"
+needless_raw_strings = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+semicolon_outside_block = "warn"
+str_to_string = "warn"
+todo = "warn"
+try_err = "warn"
+unimplemented = "warn"
+unwrap_in_result = "warn"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[profile.release]
+lto = "thin"
+strip = true

@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=schema/catalog.schema.json
+# Catalog-wide metadata. Every recipe's `category` must be listed here; the
+# category names are the English source strings for `locales/en.json`.
+name: Ultramarine Server recipes
+categories:
+  apps:
+    name: Apps
+  web:
+    name: Web

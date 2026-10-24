@@ -1,0 +1,87 @@
+name: Origin image
+
+# Builds origin/Containerfile (the recipes-origin webhook builder) for amd64
+# and arm64 and publishes a signed multi-arch image to
+# ghcr.io/ultramarine-server/recipes-builder with the shared FyraLabs/actions
+# Docker workflow. `main` is the tag infra-joever deploys. Pull requests only
+# build, after a local smoke test of each architecture.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - crates/**
+      - origin/Containerfile
+      - .dockerignore
+      - .github/workflows/origin-image.yml
+  pull_request:
+    paths:
+      - Cargo.toml
+      - Cargo.lock
+      - crates/**
+      - origin/Containerfile
+      - .dockerignore
+      - .github/workflows/origin-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: origin-image-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The image starts as nonroot and its healthcheck passes, on each
+  # architecture. Nothing is published unless this passes.
+  smoke-build:
+    name: Smoke test (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Build
+        run: podman build --format docker -f origin/Containerfile -t localhost/recipes-builder:smoke .
+
+      - name: Smoke test
+        run: |
+          set -eu
+          # No secret and no reachable repository needed: it serves /healthz
+          # even when its startup build fails.
+          podman run -d --name smoke -e ALLOW_UNSIGNED_WEBHOOKS=1 localhost/recipes-builder:smoke
+          trap 'podman logs smoke; podman rm -f smoke >/dev/null' EXIT
+          for _ in $(seq 30); do
+            if podman exec smoke /usr/local/bin/recipes-origin healthcheck; then
+              user=$(podman inspect --format '{{.Config.User}}' localhost/recipes-builder:smoke)
+              test "$user" != "" && test "$user" != "root" && test "$user" != "0"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "healthcheck never passed" >&2
+          exit 1
+
+  docker:
+    needs: smoke-build
+    # Pinned: this job can push and sign the image. Bump deliberately.
+    uses: FyraLabs/actions/.github/workflows/docker.yml@51d6b104753065880d3735f4e98672e331bab925 # main, 2026-10-22
+    with:
+      publish: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      context: .
+      dockerfile: origin/Containerfile
+      image_name: ultramarine-server/recipes-builder
+    permissions:
+      contents: read
+      packages: write
+      # Keyless cosign signing through sigstore/fulcio.
+      id-token: write

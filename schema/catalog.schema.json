@@ -1,0 +1,27 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://github.com/Ultramarine-Server/recipes/schema/catalog.schema.json",
+	"title": "Recipe catalog metadata",
+	"type": "object",
+	"additionalProperties": false,
+	"required": ["name", "categories"],
+	"properties": {
+		"name": {
+			"type": "string",
+			"minLength": 1,
+			"description": "Display name of the catalog, published as `name` in index.json."
+		},
+		"categories": {
+			"type": "object",
+			"propertyNames": { "pattern": "^[a-z][a-z0-9-]*$" },
+			"additionalProperties": {
+				"type": "object",
+				"additionalProperties": false,
+				"required": ["name"],
+				"properties": {
+					"name": { "type": "string", "minLength": 1 }
+				}
+			}
+		}
+	}
+}

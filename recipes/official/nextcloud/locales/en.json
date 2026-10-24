@@ -1,0 +1,49 @@
+{
+	"name": "Nextcloud",
+	"description": "Run Nextcloud with MariaDB, optional Redis, and managed Podman volumes.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"domain": {
+			"label": "Domain"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"overwrite_protocol": {
+			"label": "Public protocol",
+			"options": {
+				"https": "https",
+				"http": "http"
+			}
+		},
+		"admin_user": {
+			"label": "Admin user"
+		},
+		"admin_password": {
+			"label": "Admin password"
+		},
+		"database_name": {
+			"label": "Database name"
+		},
+		"database_user": {
+			"label": "Database user"
+		},
+		"db_password": {
+			"label": "Database password"
+		},
+		"enable_redis": {
+			"label": "Enable Redis cache"
+		},
+		"php_memory_limit": {
+			"label": "PHP memory limit"
+		},
+		"upload_limit": {
+			"label": "Upload limit"
+		},
+		"trusted_proxies": {
+			"label": "Trusted proxies"
+		}
+	}
+}

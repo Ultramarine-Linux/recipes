@@ -1,0 +1,22 @@
+{
+	"name": "Nginx static site",
+	"description": "Serve static files with nginx using a Quadlet-managed container.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"site_title": {
+			"label": "Site title"
+		},
+		"server_name": {
+			"label": "Server name"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"bundle_dir": {
+			"label": "Mutable bundle directory",
+			"placeholder": "Agent-managed app bundle directory"
+		}
+	}
+}

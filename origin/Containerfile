@@ -1,0 +1,31 @@
+# The origin builder image (ghcr.io/ultramarine-server/recipes-builder).
+#
+# Build from the repository root:
+#
+#   podman build --format docker -f origin/Containerfile -t recipes-builder .
+#
+# CI builds it with the shared FyraLabs/actions docker.yml workflow (buildx).
+# tetra-recipe comes from tetra's git repository, pinned by Cargo.lock.
+# (`--format docker` keeps the HEALTHCHECK in local podman builds; buildx
+# keeps it anyway.)
+
+FROM docker.io/library/rust:1-trixie AS build
+WORKDIR /src/recipes
+COPY Cargo.toml Cargo.lock ./
+COPY crates crates
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/local/cargo/git \
+    --mount=type=cache,target=/src/recipes/target \
+    cargo build --release --locked -p recipes-origin \
+    && install -D target/release/recipes-origin /out/usr/local/bin/recipes-origin \
+    && install -d /out/data
+
+FROM gcr.io/distroless/cc-debian13:nonroot
+COPY --from=build /out/usr/local/bin/recipes-origin /usr/local/bin/recipes-origin
+# Owned by the nonroot user, so a fresh named volume mounted here is writable.
+COPY --from=build --chown=65532:65532 /out/data /data
+ENV PORT=8080 DATA_DIR=/data
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s \
+    CMD ["/usr/local/bin/recipes-origin", "healthcheck"]
+ENTRYPOINT ["/usr/local/bin/recipes-origin"]

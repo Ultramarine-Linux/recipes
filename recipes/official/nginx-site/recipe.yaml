@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: nginx-site
+name: Nginx static site
+description: Serve static files with nginx using a Quadlet-managed container.
+category: web
+icon: nginx
+version: 0.2.1
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: demo-web
+  - key: site_title
+    label: Site title
+    type: string
+    required: true
+    default: Demo Web
+  - key: server_name
+    label: Server name
+    type: string
+    required: true
+    default: _
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8080
+    min: 1
+    max: 65535
+  # Left empty, the agent fills in the app's real bundle directory.
+  - key: bundle_dir
+    label: Mutable bundle directory
+    type: string
+    required: false
+    placeholder: Agent-managed app bundle directory
+resources:
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: containers/nginx-site.container.tera
+  - type: file
+    filename: site/index.html
+    template: files/nginx-index.html.tera
+  - type: file
+    filename: conf/default.conf
+    template: files/nginx-default.conf.tera
