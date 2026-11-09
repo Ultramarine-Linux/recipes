@@ -1,0 +1,44 @@
+{
+    "name": "",
+    "description": "",
+    "parameters": {
+        "app_id": {
+            "label": ""
+        },
+        "domain": {
+            "label": ""
+        },
+        "public_protocol": {
+            "label": "",
+            "options": {
+                "https": "",
+                "http": ""
+            }
+        },
+        "host_port": {
+            "label": ""
+        },
+        "allow_signups": {
+            "label": ""
+        },
+        "enable_admin_panel": {
+            "label": ""
+        },
+        "admin_token": {
+            "label": ""
+        },
+        "enable_sso": {
+            "label": ""
+        },
+        "sso_authority": {
+            "label": "",
+            "placeholder": ""
+        },
+        "sso_client_id": {
+            "label": ""
+        },
+        "sso_client_secret": {
+            "label": ""
+        }
+    }
+}

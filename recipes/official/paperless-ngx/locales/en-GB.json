@@ -1,0 +1,44 @@
+{
+    "name": "",
+    "description": "",
+    "parameters": {
+        "app_id": {
+            "label": ""
+        },
+        "domain": {
+            "label": ""
+        },
+        "public_protocol": {
+            "label": "",
+            "options": {
+                "https": "",
+                "http": ""
+            }
+        },
+        "host_port": {
+            "label": ""
+        },
+        "admin_user": {
+            "label": ""
+        },
+        "admin_password": {
+            "label": ""
+        },
+        "database_name": {
+            "label": ""
+        },
+        "database_user": {
+            "label": ""
+        },
+        "db_password": {
+            "label": ""
+        },
+        "secret_key": {
+            "label": ""
+        },
+        "ocr_language": {
+            "label": "",
+            "placeholder": ""
+        }
+    }
+}
