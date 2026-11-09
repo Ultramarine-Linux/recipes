@@ -1,0 +1,18 @@
+{
+    "name": "",
+    "description": "",
+    "parameters": {
+        "app_id": {
+            "label": ""
+        },
+        "host_port": {
+            "label": ""
+        },
+        "sync_port": {
+            "label": ""
+        },
+        "enable_local_discovery": {
+            "label": ""
+        }
+    }
+}
