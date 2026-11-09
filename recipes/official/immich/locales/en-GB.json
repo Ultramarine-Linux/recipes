@@ -1,0 +1,27 @@
+{
+    "name": "",
+    "description": "",
+    "parameters": {
+        "app_id": {
+            "label": ""
+        },
+        "host_port": {
+            "label": ""
+        },
+        "database_name": {
+            "label": ""
+        },
+        "database_user": {
+            "label": ""
+        },
+        "db_password": {
+            "label": ""
+        },
+        "enable_machine_learning": {
+            "label": ""
+        },
+        "database_on_hdd": {
+            "label": ""
+        }
+    }
+}
