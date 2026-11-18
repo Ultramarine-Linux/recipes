@@ -6,7 +6,10 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use recipes_catalog::{CheckOptions, Repo, build, check, extract, json};
+use recipes_catalog::{
+    Catalog, CheckOptions, Published, Repo, build, check, extract, history::MAX_VERSIONS, images,
+    json,
+};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use tempfile::TempDir;
@@ -86,7 +89,10 @@ fn fixture() -> TempDir {
     write(
         root,
         "recipes/community/alpha/recipe.yaml",
-        &recipe_yaml("alpha"),
+        &format!(
+            "{}homepage: https://example.com/alpha\ndocumentation: https://example.com/alpha/docs\n",
+            recipe_yaml("alpha")
+        ),
     );
     extract(&load(root)).unwrap();
     dir
@@ -187,8 +193,8 @@ fn builds_the_documented_format() {
     );
     let repo = load(root);
     assert!(check(&repo, &CheckOptions::default()).unwrap().is_ok());
-    let catalog = build(&repo).unwrap();
-    assert_eq!(build(&load(root)).unwrap(), catalog, "deterministic");
+    let catalog = build(&repo, None).unwrap();
+    assert_eq!(build(&load(root), None).unwrap(), catalog, "deterministic");
 
     let index: Value = serde_json::from_str(&catalog.files["index.json"]).unwrap();
     let keys = |value: &Value| {
@@ -226,15 +232,29 @@ fn builds_the_documented_format() {
             "description",
             "category",
             "icon",
+            "homepage",
+            "documentation",
             "version",
             "catalog",
             "sha256",
-            "bundle"
+            "bundle",
+            "versions"
         ]
+    );
+    assert_eq!(
+        zeta["versions"],
+        json!([{ "version": "1.0.0", "sha256": zeta["sha256"], "bundle": zeta["bundle"] }])
     );
     assert_eq!(recipes[0]["catalog"], "community");
     assert_eq!(zeta["catalog"], "official");
     assert_eq!(zeta["icon"], Value::Null);
+    assert_eq!(zeta["homepage"], Value::Null);
+    assert_eq!(zeta["documentation"], Value::Null);
+    assert_eq!(recipes[0]["homepage"], "https://example.com/alpha");
+    assert_eq!(
+        recipes[0]["documentation"],
+        "https://example.com/alpha/docs"
+    );
 
     let path = zeta["bundle"].as_str().unwrap();
     let text = &catalog.files[path];
@@ -284,13 +304,13 @@ fn translations_change_the_bundle_not_the_digest() {
         let index: Value = serde_json::from_str(&catalog.files["index.json"]).unwrap();
         index["recipes"][1].clone()
     };
-    let before = entry(&build(&load(root)).unwrap());
+    let before = entry(&build(&load(root), None).unwrap());
     write(
         root,
         "recipes/official/zeta/locales/de.json",
         r#"{ "name": "Zeta" }"#,
     );
-    let after = entry(&build(&load(root)).unwrap());
+    let after = entry(&build(&load(root), None).unwrap());
     assert_eq!(after["sha256"], before["sha256"]);
     assert_ne!(after["bundle"], before["bundle"]);
 }
@@ -299,11 +319,14 @@ fn translations_change_the_bundle_not_the_digest() {
 fn writes_identical_bytes_on_rebuild() {
     let dir = fixture();
     let out = tempfile::tempdir().unwrap();
-    let catalog = build(&load(dir.path())).unwrap();
+    let catalog = build(&load(dir.path()), None).unwrap();
     catalog.write(out.path()).unwrap();
     let first = read_tree(&out.path().join("v1"));
     fs::write(out.path().join("keep.txt"), "not ours").unwrap();
-    build(&load(dir.path())).unwrap().write(out.path()).unwrap();
+    build(&load(dir.path()), None)
+        .unwrap()
+        .write(out.path())
+        .unwrap();
     assert_eq!(read_tree(&out.path().join("v1")), first);
     assert!(out.path().join("keep.txt").exists());
 }
@@ -570,6 +593,22 @@ fn schema_catches_unknown_fields_and_categories() {
 }
 
 #[test]
+fn links_must_be_https() {
+    let dir = fixture();
+    write(
+        dir.path(),
+        "recipes/official/zeta/recipe.yaml",
+        &format!(
+            "{}homepage: http://example.com\ndocumentation: https://example.com/docs\n",
+            recipe_yaml("zeta")
+        ),
+    );
+    // The schema catches it, and so does tetra, which hosts run too.
+    assert_error(dir.path(), "recipes/official/zeta/recipe.yaml: /homepage");
+    assert_error(dir.path(), "homepage must be an https:// URL");
+}
+
+#[test]
 fn parameter_sanity() {
     let dir = fixture();
     let yaml = recipe_yaml("zeta").replace(
@@ -640,7 +679,7 @@ fn renders_with_sample_values() {
 #[test]
 fn changed_bundles_need_a_version_bump() {
     let dir = fixture();
-    let published = build(&load(dir.path())).unwrap();
+    let published = build(&load(dir.path()), None).unwrap();
     let previous: Value = serde_json::from_str(&published.files["index.json"]).unwrap();
     let options = CheckOptions {
         previous_index: Some(previous),
@@ -668,4 +707,312 @@ fn changed_bundles_need_a_version_bump() {
         );
     }
     assert!(check(&load(dir.path()), &options).unwrap().is_ok());
+}
+
+/// Set a fixture recipe's `version`, which changes its bundle too.
+fn release(root: &Path, id: &str, version: &str) {
+    let path = format!("recipes/{id}/recipe.yaml");
+    let yaml = fs::read_to_string(root.join(&path)).unwrap();
+    let yaml = yaml
+        .lines()
+        .map(|line| {
+            if line.starts_with("version: ") {
+                format!("version: {version}")
+            } else {
+                line.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    write(root, &path, &(yaml + "\n"));
+}
+
+/// Build `root` on top of `previous` and publish it into a fresh directory.
+fn publish(root: &Path, previous: Option<&Published>) -> (TempDir, Published, Catalog) {
+    let out = tempfile::tempdir().unwrap();
+    let catalog = build(&load(root), previous).unwrap();
+    let base = catalog.write(out.path()).unwrap();
+    let published = Published::load(&base).unwrap();
+    (out, published, catalog)
+}
+
+fn versions(catalog: &Catalog, id: &str) -> Vec<String> {
+    let index: Value = serde_json::from_str(&catalog.files["index.json"]).unwrap();
+    let entry = index["recipes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"] == id)
+        .unwrap();
+    entry["versions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|version| {
+            let bundle = version["bundle"].as_str().unwrap();
+            assert!(catalog.files.contains_key(bundle), "{bundle} is served");
+            version["version"].as_str().unwrap().to_owned()
+        })
+        .collect()
+}
+
+#[test]
+fn keeps_older_versions() {
+    let dir = fixture();
+    let (_first, published, _) = publish(dir.path(), None);
+
+    release(dir.path(), "official/zeta", "1.1.0");
+    let (_second, published, catalog) = publish(dir.path(), Some(&published));
+    assert_eq!(versions(&catalog, "zeta"), ["1.1.0", "1.0.0"]);
+    // Unchanged recipes list their one version once.
+    assert_eq!(versions(&catalog, "alpha"), ["1.0.0"]);
+    assert!(catalog.warnings.is_empty(), "{:?}", catalog.warnings);
+
+    // Rebuilding the same tree changes nothing.
+    let (_third, _, again) = publish(dir.path(), Some(&published));
+    assert_eq!(again, catalog);
+
+    // Old indexes without `versions` still count as one version.
+    let mut old_index: Value = serde_json::from_str(&catalog.files["index.json"]).unwrap();
+    for entry in old_index["recipes"].as_array_mut().unwrap() {
+        entry.as_object_mut().unwrap().remove("versions");
+    }
+    let old = tempfile::tempdir().unwrap();
+    let base = Catalog {
+        files: catalog
+            .files
+            .iter()
+            .map(|(path, text)| {
+                let text = if path == "index.json" {
+                    json::to_string(&old_index)
+                } else {
+                    text.clone()
+                };
+                (path.clone(), text)
+            })
+            .collect(),
+        recipes: 2,
+        warnings: Vec::new(),
+    }
+    .write(old.path())
+    .unwrap();
+    release(dir.path(), "official/zeta", "1.2.0");
+    let (_, _, catalog) = publish(dir.path(), Some(&Published::load(&base).unwrap()));
+    assert_eq!(versions(&catalog, "zeta"), ["1.2.0", "1.1.0"]);
+}
+
+#[test]
+fn keeps_at_most_max_versions() {
+    let dir = fixture();
+    let (mut out, mut published, _) = publish(dir.path(), None);
+    for minor in 1..=MAX_VERSIONS + 2 {
+        release(dir.path(), "official/zeta", &format!("1.{minor}.0"));
+        (out, published, _) = publish(dir.path(), Some(&published));
+    }
+    let _keep = out;
+    let catalog = build(&load(dir.path()), Some(&published)).unwrap();
+    let listed = versions(&catalog, "zeta");
+    assert_eq!(listed.len(), MAX_VERSIONS);
+    assert_eq!(listed[0], format!("1.{}.0", MAX_VERSIONS + 2));
+    assert_eq!(listed[MAX_VERSIONS - 1], "1.3.0");
+    // Only listed bundles are served.
+    let bundles = catalog
+        .files
+        .keys()
+        .filter(|path| path.starts_with("recipes/zeta/"))
+        .count();
+    assert_eq!(bundles, MAX_VERSIONS);
+}
+
+#[test]
+fn drops_corrupt_old_bundles() {
+    let dir = fixture();
+    let (first, published, catalog) = publish(dir.path(), None);
+    let old = catalog
+        .files
+        .keys()
+        .find(|path| path.starts_with("recipes/zeta/"))
+        .unwrap()
+        .clone();
+    fs::write(first.path().join("v1").join(&old), "tampered").unwrap();
+
+    release(dir.path(), "official/zeta", "1.1.0");
+    let catalog = build(&load(dir.path()), Some(&published)).unwrap();
+    assert_eq!(versions(&catalog, "zeta"), ["1.1.0"]);
+    assert_eq!(catalog.warnings.len(), 1, "{:?}", catalog.warnings);
+    assert!(catalog.warnings[0].contains("doesn't match its content hash"));
+}
+
+#[test]
+fn versions_never_go_backwards() {
+    let dir = fixture();
+    release(dir.path(), "official/zeta", "1.1.0");
+    let (_out, published, _) = publish(dir.path(), None);
+    let options = CheckOptions {
+        previous_index: Some(published.index.clone()),
+    };
+
+    release(dir.path(), "official/zeta", "1.0.5");
+    let errors = check(&load(dir.path()), &options).unwrap().errors;
+    assert_eq!(errors.len(), 1, "{errors:#?}");
+    assert!(errors[0].contains("version 1.0.5 is older than the published 1.1.0"));
+
+    // Going back to the exact old bundle is still a downgrade.
+    release(dir.path(), "official/zeta", "1.1.1");
+    let (_out, published, _) = publish(dir.path(), Some(&published));
+    release(dir.path(), "official/zeta", "1.1.0");
+    let options = CheckOptions {
+        previous_index: Some(published.index),
+    };
+    let errors = check(&load(dir.path()), &options).unwrap().errors;
+    assert!(errors[0].contains("version 1.1.0 is older than the published 1.1.1"));
+}
+
+/// A registry whose digests are a hash of `name:tag` plus a salt, so a
+/// "rebuild" of a tag is a salt change.
+struct FakeRegistry {
+    tags: BTreeMap<&'static str, Vec<&'static str>>,
+    salt: &'static str,
+}
+
+impl images::Registry for FakeRegistry {
+    fn tags(&mut self, name: &str) -> anyhow::Result<Vec<String>> {
+        self.tags
+            .get(name)
+            .map(|tags| tags.iter().map(|&tag| tag.to_owned()).collect())
+            .ok_or_else(|| anyhow::anyhow!("{name} not found"))
+    }
+
+    fn digest(&mut self, name: &str, tag: &str) -> anyhow::Result<String> {
+        let hash = Sha256::digest(format!("{name}:{tag}{}", self.salt).as_bytes());
+        Ok(format!("sha256:{}", hex::encode(hash)))
+    }
+}
+
+#[test]
+fn updates_images() {
+    let dir = fixture();
+    let app = format!("docker.io/acme/app:1.2.3@sha256:{}", "a".repeat(64));
+    write(
+        dir.path(),
+        "recipes/official/zeta/templates/app.container.tera",
+        &format!("[Container]\nContainerName={{{{ app_id }}}}\nImage={app}\n"),
+    );
+    let mut registry = FakeRegistry {
+        tags: BTreeMap::from([
+            (
+                "docker.io/acme/app",
+                vec!["1.2.3", "1.2.4", "1.3.0", "1.3.0-rc.1", "2.0.0", "latest"],
+            ),
+            ("docker.io/library/nginx", vec!["alpine", "1.29"]),
+        ]),
+        salt: "",
+    };
+
+    let repo = load(dir.path());
+    let updates = images::plan(&repo, &mut registry, &[], None).unwrap();
+    let zeta = updates.iter().find(|u| u.id == "zeta").unwrap();
+    assert_eq!(zeta.changes.len(), 1);
+    assert_eq!(zeta.changes[0].to.tag.as_deref(), Some("1.3.0"));
+    assert_eq!(zeta.held.len(), 1);
+    assert_eq!(zeta.held[0].available, "2.0.0");
+    assert_eq!(zeta.version, Some(("1.0.0".into(), "1.0.1".into())));
+    // `alpine` has no version: its digest is refreshed.
+    let alpha = updates.iter().find(|u| u.id == "alpha").unwrap();
+    assert_eq!(alpha.changes[0].to.tag.as_deref(), Some("alpine"));
+    assert_ne!(alpha.changes[0].to.digest, alpha.changes[0].from.digest);
+
+    let text = images::summary(&updates);
+    assert!(
+        text.contains("| `zeta` (1.0.0 → 1.0.1) | `docker.io/acme/app` | `1.2.3`"),
+        "{text}"
+    );
+    assert!(
+        text.contains("| `zeta` | `docker.io/acme/app` | `1.2.3` | `2.0.0` |"),
+        "{text}"
+    );
+
+    images::apply(&repo, &updates).unwrap();
+    let template = fs::read_to_string(
+        dir.path()
+            .join("recipes/official/zeta/templates/app.container.tera"),
+    )
+    .unwrap();
+    assert!(template.contains("Image=docker.io/acme/app:1.3.0@sha256:"));
+    let yaml = fs::read_to_string(dir.path().join("recipes/official/zeta/recipe.yaml")).unwrap();
+    assert!(yaml.contains("version: 1.0.1\n"));
+    assert!(errors(dir.path()).is_empty(), "{:#?}", errors(dir.path()));
+
+    // A second run finds nothing new.
+    let updates = images::plan(&load(dir.path()), &mut registry, &[], None).unwrap();
+    assert!(updates.iter().all(|u| u.changes.is_empty()), "{updates:#?}");
+
+    // A rebuilt tag is picked up, but a version that's already ahead of the
+    // published one isn't bumped again.
+    registry.salt = "rebuilt";
+    let published = json!({ "recipes": [
+        { "id": "zeta", "version": "1.0.0", "sha256": "x", "bundle": "recipes/zeta/x.json" },
+        { "id": "alpha", "version": "1.0.0", "sha256": "y", "bundle": "recipes/alpha/y.json" },
+    ] });
+    let updates = images::plan(
+        &load(dir.path()),
+        &mut registry,
+        &["zeta".into()],
+        Some(&published),
+    )
+    .unwrap();
+    assert_eq!(updates.len(), 1);
+    assert_eq!(updates[0].changes.len(), 1);
+    assert_eq!(updates[0].version, None);
+}
+
+#[test]
+fn update_policies_and_failures() {
+    let dir = fixture();
+    let digest = "a".repeat(64);
+    write(
+        dir.path(),
+        "recipes/official/zeta/templates/app.container.tera",
+        &format!(
+            "[Container]\nContainerName={{{{ app_id }}}}\n# image-updates: major\nImage=docker.io/acme/app:1.2.3@sha256:{digest}\n"
+        ),
+    );
+    write(
+        dir.path(),
+        "recipes/community/alpha/templates/app.container.tera",
+        &format!(
+            "[Container]\nContainerName={{{{ app_id }}}}\n# image-updates: off\nImage=docker.io/acme/gone:1@sha256:{digest}\n"
+        ),
+    );
+    let mut registry = FakeRegistry {
+        tags: BTreeMap::from([("docker.io/acme/app", vec!["1.2.3", "2.0.0"])]),
+        salt: "",
+    };
+    let updates = images::plan(&load(dir.path()), &mut registry, &[], None).unwrap();
+    // `major` lets it through; `off` never asks the registry (which doesn't
+    // know the image).
+    assert_eq!(updates.len(), 1, "{updates:#?}");
+    assert_eq!(updates[0].changes[0].to.tag.as_deref(), Some("2.0.0"));
+    assert!(updates[0].held.is_empty());
+
+    // An unknown image is reported, not fatal, and keeps the rest of its
+    // recipe where it is.
+    write(
+        dir.path(),
+        "recipes/official/zeta/templates/app.container.tera",
+        &format!(
+            "[Container]\nContainerName={{{{ app_id }}}}\n# image-updates: major\nImage=docker.io/acme/app:1.2.3@sha256:{digest}\nImage=docker.io/acme/gone:1@sha256:{digest}\n"
+        ),
+    );
+    let updates = images::plan(&load(dir.path()), &mut registry, &[], None).unwrap();
+    let zeta = updates.iter().find(|u| u.id == "zeta").unwrap();
+    assert!(
+        zeta.errors[0].contains("docker.io/acme/gone not found"),
+        "{zeta:#?}"
+    );
+    assert!(zeta.changes.is_empty());
+    assert_eq!(zeta.version, None);
+    assert!(images::summary(&updates).contains("## Couldn't check"));
+
+    assert!(images::plan(&load(dir.path()), &mut registry, &["nope".into()], None).is_err());
 }

@@ -1,0 +1,60 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: copyparty
+name: copyparty
+description: Share, upload, and browse files from a browser with resumable uploads and media thumbnails.
+category: files
+homepage: https://github.com/9001/copyparty
+documentation: https://github.com/9001/copyparty/blob/hovudstraum/scripts/docker/README.md
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: copyparty
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 3923
+    min: 1024
+    max: 65535
+  - key: admin_user
+    label: Admin username
+    type: string
+    required: true
+    default: admin
+  - key: admin_password
+    label: Admin password
+    type: secret
+    required: true
+    generate: random_32
+  - key: public_read
+    label: Let anyone browse and download without logging in
+    type: boolean
+    required: true
+    default: false
+  # Left empty, the agent fills in the app's real bundle directory.
+  - key: bundle_dir
+    label: Mutable bundle directory
+    type: string
+    required: false
+    placeholder: Agent-managed app bundle directory
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  # copyparty keeps its own state (sessions, shares) under /cfg, so only the
+  # config file comes from the bundle.
+  - type: volume
+    filename: "{{ app_id }}-state.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: copyparty.container.tera
+  - type: file
+    filename: config/copyparty.conf
+    template: copyparty.conf.tera

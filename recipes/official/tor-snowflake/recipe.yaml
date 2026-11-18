@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: tor-snowflake
+name: Tor Snowflake proxy
+description: Help people in censored countries reach Tor by relaying their traffic through a Snowflake proxy.
+category: security
+icon: torproject
+homepage: https://snowflake.torproject.org/
+documentation: https://community.torproject.org/relay/setup/snowflake/standalone/docker/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: tor-snowflake
+  - key: capacity
+    label: Maximum concurrent clients (0 for no limit)
+    type: integer
+    required: true
+    default: 0
+    min: 0
+    max: 1000
+resources:
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: tor-snowflake.container.tera

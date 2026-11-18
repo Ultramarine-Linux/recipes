@@ -1,0 +1,22 @@
+{
+	"name": "Tor bridge (obfs4)",
+	"description": "Run an obfs4 Tor bridge so people facing censorship can connect to Tor.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"or_port": {
+			"label": "OR port"
+		},
+		"pt_port": {
+			"label": "obfs4 port"
+		},
+		"email": {
+			"label": "Contact email",
+			"placeholder": "you@example.com"
+		},
+		"nickname": {
+			"label": "Bridge nickname"
+		}
+	}
+}

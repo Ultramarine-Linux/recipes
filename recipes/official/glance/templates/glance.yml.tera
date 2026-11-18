@@ -1,0 +1,28 @@
+# Glance configuration: https://github.com/glanceapp/glance/blob/main/docs/configuration.md
+pages:
+  - name: Home
+    columns:
+      - size: small
+        widgets:
+          - type: calendar
+            first-day-of-week: monday
+
+      - size: full
+        widgets:
+          - type: group
+            widgets:
+              - type: hacker-news
+              - type: lobsters
+
+          - type: rss
+            limit: 10
+            collapse-after: 5
+            cache: 12h
+            feeds:
+              - url: https://blog.fyralabs.com/rss/
+                title: Fyra Labs
+
+      - size: small
+        widgets:
+          - type: clock
+            hour-format: 24h

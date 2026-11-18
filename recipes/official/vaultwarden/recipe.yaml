@@ -4,7 +4,9 @@ name: Vaultwarden
 description: Self-host a Bitwarden-compatible password manager. Needs HTTPS for the web vault.
 category: security
 icon: vaultwarden
-version: 0.1.1
+homepage: https://github.com/dani-garcia/vaultwarden
+documentation: https://github.com/dani-garcia/vaultwarden/wiki
+version: 0.1.2
 requires:
   - podman
   - quadlets

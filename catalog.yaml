@@ -19,3 +19,7 @@ categories:
     name: Monitoring
   security:
     name: Security
+  communication:
+    name: Communication
+  games:
+    name: Games

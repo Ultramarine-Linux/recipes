@@ -1,0 +1,15 @@
+"use strict";
+
+// Anything left out uses The Lounge's defaults:
+// https://thelounge.chat/docs/configuration
+module.exports = {
+	public: {% if mode == "public" %}true{% else %}false{% endif %},
+	host: undefined,
+	port: 9000,
+	reverseProxy: {{ behind_reverse_proxy }},
+	prefetch: true,
+	prefetchStorage: true,
+	fileUpload: {
+		enable: true,
+	},
+};

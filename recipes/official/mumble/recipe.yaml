@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: mumble
+name: Mumble
+description: Low-latency, high-quality voice chat for gaming and groups.
+category: communication
+icon: mumble
+homepage: https://www.mumble.info/
+documentation: https://github.com/mumble-voip/mumble-docker
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: mumble
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 64738
+    min: 1024
+    max: 65535
+  - key: superuser_password
+    label: SuperUser password
+    type: secret
+    required: true
+    generate: random_32
+  - key: server_password
+    label: Server password
+    type: secret
+    required: false
+    placeholder: Leave empty for an open server
+  - key: max_users
+    label: Maximum users
+    type: integer
+    required: true
+    default: 100
+    min: 1
+    max: 10000
+  - key: welcome_text
+    label: Welcome message
+    type: string
+    required: true
+    default: Welcome to this Mumble server!
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: mumble.container.tera

@@ -1,0 +1,19 @@
+{
+	"name": "Glance",
+	"description": "A self-hosted dashboard for your feeds, calendars, weather, and services.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"timezone": {
+			"label": "Time zone"
+		},
+		"bundle_dir": {
+			"label": "Mutable bundle directory",
+			"placeholder": "Agent-managed app bundle directory"
+		}
+	}
+}

@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=lscr.io/linuxserver/lidarr:3.1.6@sha256:9fddcf5c613361edfce390d4e6b7c364282e71e90a40ce7793077fed788f6e63
+Volume={{ app_id }}-config.volume:/config
+Volume={{ data_volume }}:/data
+Environment={{ ("TZ=" ~ timezone) | systemd_quote }}
+PublishPort={{ host_port }}:8686
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

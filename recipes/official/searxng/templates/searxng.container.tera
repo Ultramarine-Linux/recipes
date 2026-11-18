@@ -1,0 +1,17 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/searxng/searxng:2026.10.27-cb74e7f81@sha256:9dc6d0472930d981f5955f0379e107257383be2d81897b25df89cf37d789f152
+Volume={{ app_id }}-config.volume:/etc/searxng
+Volume={{ app_id }}-cache.volume:/var/cache/searxng
+Environment={{ ("SEARXNG_BASE_URL=" ~ base_url) | systemd_quote }}
+Environment={{ ("SEARXNG_SECRET=" ~ secret_key) | systemd_quote }}
+PublishPort={{ host_port }}:8080
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

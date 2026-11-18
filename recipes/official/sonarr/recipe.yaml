@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: sonarr
+name: Sonarr
+description: Find, download, and organize TV shows automatically.
+category: media
+icon: sonarr
+homepage: https://sonarr.tv/
+documentation: https://wiki.servarr.com/sonarr
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: sonarr
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8989
+    min: 1024
+    max: 65535
+  - key: timezone
+    label: Time zone
+    type: string
+    required: true
+    default: Etc/UTC
+  # A plain Podman volume, not a Quadlet one, so every *arr app and the
+  # download client can mount the same one (hardlinks need one filesystem).
+  - key: data_volume
+    label: Shared media volume
+    type: string
+    required: true
+    default: media-data
+resources:
+  - type: volume
+    filename: "{{ app_id }}-config.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: sonarr.container.tera

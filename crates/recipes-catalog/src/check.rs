@@ -27,6 +27,7 @@
 //!   have bumped its `version`
 
 use std::{
+    cmp::Ordering,
     collections::{BTreeMap, BTreeSet},
     fs,
     path::Path,
@@ -35,13 +36,13 @@ use std::{
 use anyhow::{Context, Result};
 use jsonschema::Validator;
 use serde_json::Value;
-use serde_norway::Value as YamlValue;
 use tetra_recipe::{
     AppRecipe, ParameterKind, RenderedResource, ResourceKind,
     verification::{bundle_sha256, verify_images},
 };
 
 use crate::{
+    history::{compare_versions, published_versions},
     json,
     locales::{catalog_source, flatten, is_blank, recipe_source},
     repo::{Locales, Recipe, Repo, SHARED_PREFIX, SOURCE_LOCALE, Tier},
@@ -352,18 +353,18 @@ fn check_render(
     }
 }
 
-fn sample_values(recipe: &AppRecipe, flag: bool) -> BTreeMap<String, YamlValue> {
+fn sample_values(recipe: &AppRecipe, flag: bool) -> BTreeMap<String, Value> {
     let mut values = BTreeMap::new();
     for parameter in &recipe.parameters {
         let value = match parameter.kind {
-            ParameterKind::Boolean => YamlValue::Bool(flag),
+            ParameterKind::Boolean => Value::Bool(flag),
             _ if parameter.default.is_some() || parameter.generate.is_some() => continue,
-            ParameterKind::String | ParameterKind::Secret => YamlValue::String("example".into()),
+            ParameterKind::String | ParameterKind::Secret => Value::String("example".into()),
             ParameterKind::Integer => {
-                YamlValue::Number(parameter.min.or(parameter.max).unwrap_or(1).into())
+                Value::Number(parameter.min.or(parameter.max).unwrap_or(1).into())
             }
             ParameterKind::Choice => match parameter.options.first() {
-                Some(option) => YamlValue::String(option.clone()),
+                Some(option) => Value::String(option.clone()),
                 None => continue,
             },
         };
@@ -405,36 +406,38 @@ fn check_translations(report: &mut Report, at: &str, locales: &Locales, source: 
 }
 
 /// A recipe whose bundle changed must ship under a new version: hosts record
-/// the version they installed, and the dashboard offers updates by version.
+/// the version they installed, dashboards offer updates by version, and the
+/// catalog keeps serving older versions, so a version number always means
+/// the same bundle. Versions also never go backwards, or dashboards would
+/// stop offering the update to hosts already on the newer one.
 fn check_versions(
     report: &mut Report,
     repo: &Repo,
     digests: &BTreeMap<&str, (String, String)>,
     previous: &Value,
 ) {
-    let published = previous
-        .get("recipes")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten();
-    for entry in published {
-        let field = |name| entry.get(name).and_then(Value::as_str);
-        let (Some(id), Some(version), Some(sha256)) =
-            (field("id"), field("version"), field("sha256"))
-        else {
+    for (id, versions) in published_versions(previous) {
+        let Some((current_version, digest)) = digests.get(id.as_str()) else {
             continue;
         };
-        let Some((current_version, digest)) = digests.get(id) else {
-            continue;
-        };
-        if current_version == version && digest != sha256 {
-            let path = repo
-                .recipes
-                .iter()
-                .find(|recipe| recipe.dir_name == id)
-                .map_or(id, |recipe| recipe.path.as_str());
+        let path = repo
+            .recipes
+            .iter()
+            .find(|recipe| recipe.dir_name == id)
+            .map_or(id.as_str(), |recipe| recipe.path.as_str());
+        if let Some(newest) = versions.first()
+            && compare_versions(current_version, &newest.version) == Ordering::Less
+        {
             report.error(format!(
-                "{path}: the recipe or its templates changed since {version} was published; bump `version`"
+                "{path}: version {current_version} is older than the published {}; versions can't go backwards (bump past it to revert)",
+                newest.version
+            ));
+        } else if versions
+            .iter()
+            .any(|old| &old.version == current_version && &old.sha256 != digest)
+        {
+            report.error(format!(
+                "{path}: the recipe or its templates changed since {current_version} was published; bump `version`"
             ));
         }
     }

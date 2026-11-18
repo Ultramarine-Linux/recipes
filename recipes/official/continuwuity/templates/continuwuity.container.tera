@@ -1,0 +1,20 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=forgejo.ellis.link/continuwuation/continuwuity:v26.9.1@sha256:c9c62bc5c0a641f3f713945c701b069c7bc30d2612b54d4a5de80a5be19d5420
+Volume={{ app_id }}-db.volume:/var/lib/continuwuity
+Environment={{ ("CONTINUWUITY_SERVER_NAME=" ~ server_name) | systemd_quote }}
+Environment=CONTINUWUITY_DATABASE_PATH=/var/lib/continuwuity
+Environment=CONTINUWUITY_ADDRESS=0.0.0.0
+Environment=CONTINUWUITY_PORT=8008
+Environment=CONTINUWUITY_ALLOW_REGISTRATION={{ allow_registration }}
+Environment={{ ("CONTINUWUITY_REGISTRATION_TOKEN=" ~ registration_token) | systemd_quote }}
+PublishPort={{ host_port }}:8008
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

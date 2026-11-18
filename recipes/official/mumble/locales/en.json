@@ -1,0 +1,25 @@
+{
+	"name": "Mumble",
+	"description": "Low-latency, high-quality voice chat for gaming and groups.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"superuser_password": {
+			"label": "SuperUser password"
+		},
+		"server_password": {
+			"label": "Server password",
+			"placeholder": "Leave empty for an open server"
+		},
+		"max_users": {
+			"label": "Maximum users"
+		},
+		"welcome_text": {
+			"label": "Welcome message"
+		}
+	}
+}

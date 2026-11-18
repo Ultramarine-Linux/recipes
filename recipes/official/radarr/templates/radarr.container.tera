@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=lscr.io/linuxserver/radarr:6.4.4@sha256:084b3b2ab1d0ef930660727259546a241f2bdf67c9ed085d54bf1486a6887c9b
+Volume={{ app_id }}-config.volume:/config
+Volume={{ data_volume }}:/data
+Environment={{ ("TZ=" ~ timezone) | systemd_quote }}
+PublishPort={{ host_port }}:7878
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

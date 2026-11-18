@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: searxng
+name: SearXNG
+description: Search the web privately through a metasearch engine you host.
+category: productivity
+icon: searxng
+homepage: https://github.com/searxng/searxng
+documentation: https://docs.searxng.org/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: searxng
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8080
+    min: 1024
+    max: 65535
+  - key: base_url
+    label: Public URL
+    type: string
+    required: true
+    default: http://localhost:8080/
+  - key: secret_key
+    label: Secret key
+    type: secret
+    required: true
+    generate: random_32
+resources:
+  - type: volume
+    filename: "{{ app_id }}-config.volume"
+    template: shared/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-cache.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: searxng.container.tera

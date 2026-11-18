@@ -1,0 +1,20 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/copyparty/ac:1.20.26@sha256:b2054d65e05daa8982ca17c26b12b74315c0ce586a03ff9018a59c80731b9e19
+Volume={{ app_id }}-data.volume:/w
+Volume={{ app_id }}-state.volume:/cfg
+Volume={{ bundle_dir }}/config/copyparty.conf:/cfg/copyparty.conf:ro,z
+Environment=PYTHONUNBUFFERED=1
+PublishPort={{ host_port }}:3923
+HealthCmd=wget --spider -q 127.0.0.1:3923/?reset=/._
+HealthInterval=1m
+HealthStartPeriod=15s
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

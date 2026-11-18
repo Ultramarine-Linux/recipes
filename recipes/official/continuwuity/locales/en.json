@@ -1,0 +1,21 @@
+{
+	"name": "Continuwuity",
+	"description": "A lightweight Matrix homeserver for chatting with anyone on the Matrix network.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"server_name": {
+			"label": "Server name"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"allow_registration": {
+			"label": "Allow registration with a token"
+		},
+		"registration_token": {
+			"label": "Registration token"
+		}
+	}
+}

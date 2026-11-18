@@ -225,7 +225,8 @@ impl Recipe {
 
 /// Parse YAML into a JSON value, keeping mapping order.
 pub fn parse_yaml(text: &str) -> Result<Value> {
-    Ok(serde_norway::from_str(text)?)
+    // tetra's parser and options, so the schema checks see what hosts see.
+    tetra_recipe::yaml::from_str(text)
 }
 
 fn read_yaml(path: &Path) -> Result<Value> {

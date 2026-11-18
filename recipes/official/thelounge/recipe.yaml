@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: thelounge
+name: The Lounge
+description: A modern IRC client in your browser that stays connected while you're away.
+category: communication
+homepage: https://thelounge.chat/
+documentation: https://thelounge.chat/docs
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: thelounge
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 9000
+    min: 1024
+    max: 65535
+  # Private mode keeps users connected and logged in, but accounts are added
+  # from the command line: podman exec -it <app_id> thelounge add <name>
+  - key: mode
+    label: Mode
+    type: choice
+    required: true
+    default: private
+    options:
+      - private
+      - public
+  - key: behind_reverse_proxy
+    label: Behind a reverse proxy
+    type: boolean
+    required: true
+    default: false
+  # Left empty, the agent fills in the app's real bundle directory.
+  - key: bundle_dir
+    label: Mutable bundle directory
+    type: string
+    required: false
+    placeholder: Agent-managed app bundle directory
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: thelounge.container.tera
+  - type: file
+    filename: config/config.js
+    template: config.js.tera

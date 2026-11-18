@@ -4,7 +4,9 @@ name: Miniflux
 description: A minimalist, fast RSS and Atom feed reader backed by PostgreSQL.
 category: productivity
 icon: miniflux
-version: 0.1.1
+homepage: https://miniflux.app/
+documentation: https://miniflux.app/docs/docker.html
+version: 0.1.2
 requires:
   - podman
   - quadlets

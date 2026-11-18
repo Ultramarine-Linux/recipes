@@ -1,0 +1,15 @@
+{
+	"name": "Prowlarr",
+	"description": "Manage indexers for Radarr, Sonarr, Lidarr, and other apps in one place.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"timezone": {
+			"label": "Time zone"
+		}
+	}
+}

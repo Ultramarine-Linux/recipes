@@ -1,0 +1,21 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/mumblevoip/mumble-server:v1.6.870-5@sha256:3da59810c07528a344f6bcd4b43338f69e8c56d26678456253bc3d9639487596
+Volume={{ app_id }}-data.volume:/data
+Environment={{ ("MUMBLE_SUPERUSER_PASSWORD=" ~ superuser_password) | systemd_quote }}
+{%- if server_password %}
+Environment={{ ("MUMBLE_CONFIG_SERVER_PASSWORD=" ~ server_password) | systemd_quote }}
+{%- endif %}
+Environment=MUMBLE_CONFIG_USERS={{ max_users }}
+Environment={{ ("MUMBLE_CONFIG_WELCOMETEXT=" ~ welcome_text) | systemd_quote }}
+PublishPort={{ host_port }}:64738/tcp
+PublishPort={{ host_port }}:64738/udp
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

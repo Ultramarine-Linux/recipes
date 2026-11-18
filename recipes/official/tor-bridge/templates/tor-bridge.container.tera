@@ -1,0 +1,19 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/thetorproject/obfs4-bridge:v0.25@sha256:3e5a9cd194e889181b3e172e0fd3d3f956eac9c943a284d039ffaf60fe8530e1
+Volume={{ app_id }}-data.volume:/var/lib/tor
+Environment=OR_PORT={{ or_port }}
+Environment=PT_PORT={{ pt_port }}
+Environment={{ ("EMAIL=" ~ email) | systemd_quote }}
+Environment={{ ("NICKNAME=" ~ nickname) | systemd_quote }}
+PublishPort={{ or_port }}:{{ or_port }}
+PublishPort={{ pt_port }}:{{ pt_port }}
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

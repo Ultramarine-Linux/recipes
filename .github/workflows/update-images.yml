@@ -1,0 +1,89 @@
+name: Update images
+
+# Once a day, moves pinned images to newer tags in their release line (or
+# refreshes their digests), bumps the versions of recipes that changed, and
+# opens or updates one pull request with the result. Major versions are only
+# listed in the pull request; see "Updating images" in docs/authoring.md.
+#
+# Pull requests opened with the default GITHUB_TOKEN don't start other
+# workflows, so CI wouldn't run on them. Set the RECIPES_BOT_TOKEN secret (a
+# GitHub App or fine-grained token with contents and pull-requests write) to
+# get normal CI on the pull request; this job runs `check` itself either way.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-images
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  PUBLISHED_INDEX: https://recipes.fyralabs.com/v1/index.json
+  BRANCH: bot/update-images
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          token: ${{ secrets.RECIPES_BOT_TOKEN || github.token }}
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # master, 2026-10-16
+        with:
+          toolchain: stable
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+
+      - name: Fetch the published index
+        run: |
+          if ! curl -fsSL --max-time 30 "$PUBLISHED_INDEX" -o "$RUNNER_TEMP/published.json"; then
+            # Without it every changed recipe gets a bump, which is still safe.
+            echo "::warning::couldn't fetch $PUBLISHED_INDEX"
+            rm -f "$RUNNER_TEMP/published.json"
+          fi
+
+      - name: Update images
+        # skopeo is preinstalled on GitHub's Ubuntu runners.
+        run: |
+          previous=()
+          if [ -f "$RUNNER_TEMP/published.json" ]; then
+            previous=(--previous "$RUNNER_TEMP/published.json")
+          fi
+          cargo run --locked -p recipes -- update-images "${previous[@]}" --summary "$RUNNER_TEMP/summary.md"
+          cat "$RUNNER_TEMP/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Check
+        run: |
+          previous=()
+          if [ -f "$RUNNER_TEMP/published.json" ]; then
+            previous=(--previous "$RUNNER_TEMP/published.json")
+          fi
+          cargo run --locked -p recipes -- check --quiet "${previous[@]}"
+
+      - name: Open or update the pull request
+        env:
+          GH_TOKEN: ${{ secrets.RECIPES_BOT_TOKEN || github.token }}
+        run: |
+          set -eu
+          if git diff --quiet; then
+            echo "Nothing to update."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$BRANCH"
+          git commit -am "recipes: update images"
+          git push --force origin "$BRANCH"
+          title="recipes: update images"
+          if gh pr view "$BRANCH" --json state --jq .state 2>/dev/null | grep -qx OPEN; then
+            gh pr edit "$BRANCH" --title "$title" --body-file "$RUNNER_TEMP/summary.md"
+          else
+            gh pr create --head "$BRANCH" --base "${{ github.event.repository.default_branch }}" \
+              --title "$title" --body-file "$RUNNER_TEMP/summary.md"
+          fi

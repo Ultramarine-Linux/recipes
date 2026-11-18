@@ -19,6 +19,16 @@
 			"description": "A key of `categories` in catalog.yaml."
 		},
 		"icon": { "type": "string" },
+		"homepage": {
+			"type": "string",
+			"pattern": "^https://\\S+$",
+			"description": "The upstream project's website."
+		},
+		"documentation": {
+			"type": "string",
+			"pattern": "^https://\\S+$",
+			"description": "The upstream docs most useful for running the app, ideally its container docs."
+		},
 		"version": {
 			"type": "string",
 			"pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$"

@@ -4,7 +4,9 @@ name: Syncthing
 description: Sync files between your devices without a cloud in the middle.
 category: files
 icon: syncthing
-version: 0.1.1
+homepage: https://syncthing.net/
+documentation: https://docs.syncthing.net/
+version: 0.1.2
 requires:
   - podman
   - quadlets

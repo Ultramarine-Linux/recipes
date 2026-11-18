@@ -13,7 +13,6 @@ hex.workspace = true
 jsonschema.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-serde_norway.workspace = true
 sha2.workspace = true
 tetra-recipe.workspace = true
 

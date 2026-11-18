@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=lscr.io/linuxserver/sonarr:4.0.20@sha256:48e36b608b461273b9dae857725cd0561a127f2c694b687318f6d0c5ce63e5c9
+Volume={{ app_id }}-config.volume:/config
+Volume={{ data_volume }}:/data
+Environment={{ ("TZ=" ~ timezone) | systemd_quote }}
+PublishPort={{ host_port }}:8989
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

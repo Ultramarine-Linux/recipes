@@ -1,0 +1,26 @@
+{
+	"name": "The Lounge",
+	"description": "A modern IRC client in your browser that stays connected while you're away.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"mode": {
+			"label": "Mode",
+			"options": {
+				"private": "private",
+				"public": "public"
+			}
+		},
+		"behind_reverse_proxy": {
+			"label": "Behind a reverse proxy"
+		},
+		"bundle_dir": {
+			"label": "Mutable bundle directory",
+			"placeholder": "Agent-managed app bundle directory"
+		}
+	}
+}
