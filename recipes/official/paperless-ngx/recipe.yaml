@@ -4,7 +4,9 @@ name: Paperless-ngx
 description: Scan, OCR, and search your paper documents, with PostgreSQL and Valkey.
 category: productivity
 icon: paperlessngx
-version: 0.1.1
+homepage: https://docs.paperless-ngx.com/
+documentation: https://docs.paperless-ngx.com/setup/
+version: 0.1.2
 requires:
   - podman
   - quadlets

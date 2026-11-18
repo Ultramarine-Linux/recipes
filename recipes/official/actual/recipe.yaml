@@ -4,7 +4,9 @@ name: Actual Budget
 description: Local-first personal budgeting with sync across your devices. Needs HTTPS.
 category: productivity
 icon: actualbudget
-version: 0.1.1
+homepage: https://actualbudget.org/
+documentation: https://actualbudget.org/docs/install/docker
+version: 0.1.2
 requires:
   - podman
   - quadlets

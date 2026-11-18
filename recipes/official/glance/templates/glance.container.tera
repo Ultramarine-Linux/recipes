@@ -1,0 +1,15 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/glanceapp/glance:v0.8.7@sha256:bc5a392672c1ec8823c50b61f3bd4b7e5acc34fcbb8477862577b3af1c633875
+Volume={{ bundle_dir }}/config:/app/config:ro,z
+Environment={{ ("TZ=" ~ timezone) | systemd_quote }}
+PublishPort={{ host_port }}:8080
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

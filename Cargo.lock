@@ -1406,8 +1406,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "hex",
  "recipes-catalog",
+ "serde",
  "serde_json",
+ "sha2",
  "tetra-recipe",
 ]
 
@@ -1420,7 +1423,6 @@ dependencies = [
  "jsonschema",
  "serde",
  "serde_json",
- "serde_norway",
  "sha2",
  "tempfile",
  "tetra-recipe",

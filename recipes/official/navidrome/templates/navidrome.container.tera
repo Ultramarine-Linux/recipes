@@ -1,0 +1,15 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/deluan/navidrome:0.64.2@sha256:38dc2727bfcfd5ede290f8ada114fc90368146f265ae4701ddddbcbe2a44ee52
+Volume={{ app_id }}-data.volume:/data
+Volume={{ app_id }}-music.volume:/music:ro
+PublishPort={{ host_port }}:4533
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

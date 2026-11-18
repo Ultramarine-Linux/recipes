@@ -250,9 +250,23 @@ where
     Ok(Outcome::Published)
 }
 
-/// Check and build the source in `work` into `releases/<sha>`.
+/// Check and build the source in `work` into `releases/<sha>`, on top of
+/// the live release: its older versions stay listed, and the version checks
+/// run against it.
 fn write_release(data_dir: &Path, work: &Path, sha: &str) -> Result<()> {
-    let (_, catalog) = recipes_catalog::check_and_build(work)?;
+    let previous =
+        if current(data_dir).is_some() {
+            let live = data_dir.join("current/v1");
+            Some(recipes_catalog::Published::load(&live).context(
+                "failed to load the live catalog; refusing to build without its history",
+            )?)
+        } else {
+            None
+        };
+    let (_, catalog) = recipes_catalog::check_and_build(work, previous.as_ref())?;
+    for warning in &catalog.warnings {
+        tracing::warn!("{warning}");
+    }
     let releases = data_dir.join("releases");
     let temp = releases.join(format!(".tmp-{sha}"));
     remove_dir_if_exists(&temp)?;
@@ -489,5 +503,58 @@ mod tests {
         let fetch_failed = build_release(data.path(), SHA_B, |_| async { bail!("offline") }).await;
         assert!(fetch_failed.is_err());
         assert_eq!(current(data.path()).unwrap().sha, SHA_A);
+    }
+
+    #[tokio::test]
+    async fn builds_on_top_of_the_live_release() {
+        let data = tempfile::tempdir().unwrap();
+        prepare(data.path()).unwrap();
+        build_release(data.path(), SHA_A, |dir| async move {
+            write_source(&dir, "1.0.0")
+        })
+        .await
+        .unwrap();
+        build_release(data.path(), SHA_B, |dir| async move {
+            write_source(&dir, "1.1.0")
+        })
+        .await
+        .unwrap();
+
+        let text = fs::read_to_string(data.path().join("current/v1/index.json")).unwrap();
+        let index: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let versions = index["recipes"][0]["versions"].as_array().unwrap();
+        let listed: Vec<_> = versions
+            .iter()
+            .map(|v| v["version"].as_str().unwrap())
+            .collect();
+        assert_eq!(listed, ["1.1.0", "1.0.0"]);
+        // The old bundle is served from the new release, not the old one.
+        let old = versions[1]["bundle"].as_str().unwrap();
+        assert!(
+            data.path()
+                .join("releases")
+                .join(SHA_B)
+                .join("v1")
+                .join(old)
+                .is_file()
+        );
+
+        // Changing a published version without bumping it is refused.
+        let sha_c = "c".repeat(40);
+        let failed = build_release(data.path(), &sha_c, |dir| async move {
+            write_source(&dir, "1.1.0")?;
+            fs::write(
+                dir.join("recipes/official/demo/templates/a.txt.tera"),
+                "bye\n",
+            )?;
+            Ok(())
+        })
+        .await;
+        let error = format!("{:#}", failed.unwrap_err());
+        assert!(
+            error.contains("changed since 1.1.0 was published"),
+            "{error}"
+        );
+        assert_eq!(current(data.path()).unwrap().sha, SHA_B);
     }
 }

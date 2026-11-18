@@ -1,0 +1,25 @@
+{
+	"name": "copyparty",
+	"description": "Share, upload, and browse files from a browser with resumable uploads and media thumbnails.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"admin_user": {
+			"label": "Admin username"
+		},
+		"admin_password": {
+			"label": "Admin password"
+		},
+		"public_read": {
+			"label": "Let anyone browse and download without logging in"
+		},
+		"bundle_dir": {
+			"label": "Mutable bundle directory",
+			"placeholder": "Agent-managed app bundle directory"
+		}
+	}
+}

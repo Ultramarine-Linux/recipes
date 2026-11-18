@@ -1,0 +1,12 @@
+{
+	"name": "Tor Snowflake proxy",
+	"description": "Help people in censored countries reach Tor by relaying their traffic through a Snowflake proxy.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"capacity": {
+			"label": "Maximum concurrent clients (0 for no limit)"
+		}
+	}
+}

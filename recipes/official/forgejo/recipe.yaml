@@ -4,7 +4,9 @@ name: Forgejo
 description: Host Git repositories, issues, and pull requests with Forgejo and PostgreSQL.
 category: development
 icon: forgejo
-version: 0.1.1
+homepage: https://forgejo.org/
+documentation: https://forgejo.org/docs/latest/admin/installation/docker/
+version: 0.1.2
 requires:
   - podman
   - quadlets

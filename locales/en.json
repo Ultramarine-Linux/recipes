@@ -7,6 +7,8 @@
 		"files": "Files",
 		"development": "Development",
 		"monitoring": "Monitoring",
-		"security": "Security"
+		"security": "Security",
+		"communication": "Communication",
+		"games": "Games"
 	}
 }

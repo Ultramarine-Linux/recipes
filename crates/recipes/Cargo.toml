@@ -10,8 +10,11 @@ publish.workspace = true
 [dependencies]
 anyhow.workspace = true
 clap.workspace = true
+hex.workspace = true
 recipes-catalog.workspace = true
+serde.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 tetra-recipe.workspace = true
 
 [lints]

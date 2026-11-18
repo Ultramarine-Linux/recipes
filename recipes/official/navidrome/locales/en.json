@@ -1,0 +1,12 @@
+{
+	"name": "Navidrome",
+	"description": "Stream your music collection from any browser or Subsonic app.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		}
+	}
+}

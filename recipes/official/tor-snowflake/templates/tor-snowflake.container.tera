@@ -1,0 +1,16 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/thetorproject/snowflake-proxy:v2.15.2@sha256:b08fefd87753f95a6d05b708a1aafc0a675ac670dbfd86687b08bf91bf9e87d8
+# WebRTC needs to see the host's interfaces to get through NAT, which is
+# what Tor's own compose file does too.
+Network=host
+Exec=-capacity {{ capacity }}
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

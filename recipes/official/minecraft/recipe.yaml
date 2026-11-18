@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: minecraft
+name: Minecraft server
+description: Run a Minecraft Java Edition server, vanilla or modded.
+category: games
+icon: minecraft
+homepage: https://www.minecraft.net/
+documentation: https://docker-minecraft-server.readthedocs.io/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: minecraft
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 25565
+    min: 1024
+    max: 65535
+  # The server refuses to start until the EULA is accepted:
+  # https://www.minecraft.net/en-us/eula
+  - key: accept_eula
+    label: I accept the Minecraft EULA
+    type: boolean
+    required: true
+    default: false
+  - key: server_type
+    label: Server type
+    type: choice
+    required: true
+    default: vanilla
+    options:
+      - vanilla
+      - paper
+      - purpur
+      - fabric
+      - quilt
+      - forge
+      - neoforge
+  - key: minecraft_version
+    label: Minecraft version
+    type: string
+    required: true
+    default: LATEST
+  - key: memory
+    label: Memory
+    type: string
+    required: true
+    default: 2G
+  - key: difficulty
+    label: Difficulty
+    type: choice
+    required: true
+    default: normal
+    options:
+      - peaceful
+      - easy
+      - normal
+      - hard
+  - key: motd
+    label: Message of the day
+    type: string
+    required: true
+    default: An Ultramarine Server
+  - key: online_mode
+    label: Require Minecraft accounts (online mode)
+    type: boolean
+    required: true
+    default: true
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: minecraft.container.tera

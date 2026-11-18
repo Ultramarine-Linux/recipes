@@ -1,0 +1,18 @@
+# copyparty configuration: https://github.com/9001/copyparty#server-config
+
+[global]
+  e2dsa  # index files and scan the filesystem
+  e2ts   # index media tags
+  ansi
+  vc-url: https://api.copyparty.eu/advisories  # warn in the control panel about known vulnerabilities
+
+[accounts]
+  {{ admin_user }}: {{ admin_password }}
+
+[/]
+  /w
+  accs:
+{%- if public_read %}
+    r: *
+{%- endif %}
+    rwmda: {{ admin_user }}

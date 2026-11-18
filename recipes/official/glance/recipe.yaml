@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: glance
+name: Glance
+description: A self-hosted dashboard for your feeds, calendars, weather, and services.
+category: productivity
+homepage: https://github.com/glanceapp/glance
+documentation: https://github.com/glanceapp/glance/blob/main/docs/configuration.md
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: glance
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8080
+    min: 1024
+    max: 65535
+  - key: timezone
+    label: Time zone
+    type: string
+    required: true
+    default: Etc/UTC
+  # Left empty, the agent fills in the app's real bundle directory.
+  - key: bundle_dir
+    label: Mutable bundle directory
+    type: string
+    required: false
+    placeholder: Agent-managed app bundle directory
+resources:
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: glance.container.tera
+  # A starting point; edit it in the bundle directory, Glance reloads it live.
+  - type: file
+    filename: config/glance.yml
+    template: glance.yml.tera

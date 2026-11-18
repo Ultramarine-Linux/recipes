@@ -1,0 +1,15 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=ghcr.io/thelounge/thelounge:4.5.2@sha256:345af9c9d48d789f71a09d172fbc1bd3f250d47059c5a317497b67bd315989b7
+Volume={{ app_id }}-data.volume:/var/opt/thelounge
+Volume={{ bundle_dir }}/config/config.js:/var/opt/thelounge/config.js:ro,z
+PublishPort={{ host_port }}:9000
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

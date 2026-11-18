@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: tor-bridge
+name: Tor bridge (obfs4)
+description: Run an obfs4 Tor bridge so people facing censorship can connect to Tor.
+category: security
+icon: torproject
+homepage: https://www.torproject.org/
+documentation: https://community.torproject.org/relay/setup/bridge/docker/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: tor-bridge
+  # Both ports have to be reachable from the internet; forward them on your
+  # router if you're behind NAT.
+  - key: or_port
+    label: OR port
+    type: integer
+    required: true
+    default: 9001
+    min: 1024
+    max: 65535
+  - key: pt_port
+    label: obfs4 port
+    type: integer
+    required: true
+    default: 9002
+    min: 1024
+    max: 65535
+  - key: email
+    label: Contact email
+    type: string
+    required: true
+    placeholder: you@example.com
+  - key: nickname
+    label: Bridge nickname
+    type: string
+    required: true
+    default: UltramarineBridge
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: tor-bridge.container.tera

@@ -1,0 +1,27 @@
+[Unit]
+Description={{ name }}
+
+[Container]
+ContainerName={{ app_id }}
+Image=docker.io/itzg/minecraft-server:2026.10.1-java25@sha256:d12aed7e35981dfe259b60fbfee77d23a19b5898a7a31dca298d18b47b7b5776
+Volume={{ app_id }}-data.volume:/data
+Environment=EULA={% if accept_eula %}TRUE{% else %}FALSE{% endif %}
+Environment=TYPE={{ server_type | upper }}
+Environment={{ ("VERSION=" ~ minecraft_version) | systemd_quote }}
+Environment={{ ("MEMORY=" ~ memory) | systemd_quote }}
+Environment=DIFFICULTY={{ difficulty }}
+Environment={{ ("MOTD=" ~ motd) | systemd_quote }}
+Environment=ONLINE_MODE={% if online_mode %}TRUE{% else %}FALSE{% endif %}
+PublishPort={{ host_port }}:25565
+# The image ships a health script that pings the server.
+HealthCmd=mc-health
+HealthInterval=30s
+HealthStartPeriod=2m
+# Give the server time to save the world on shutdown.
+StopTimeout=60
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target

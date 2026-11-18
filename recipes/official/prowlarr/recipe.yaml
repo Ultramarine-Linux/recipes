@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: prowlarr
+name: Prowlarr
+description: Manage indexers for Radarr, Sonarr, Lidarr, and other apps in one place.
+category: media
+homepage: https://prowlarr.com/
+documentation: https://wiki.servarr.com/prowlarr
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: prowlarr
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 9696
+    min: 1024
+    max: 65535
+  - key: timezone
+    label: Time zone
+    type: string
+    required: true
+    default: Etc/UTC
+resources:
+  - type: volume
+    filename: "{{ app_id }}-config.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: prowlarr.container.tera

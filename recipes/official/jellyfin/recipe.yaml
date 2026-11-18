@@ -4,7 +4,9 @@ name: Jellyfin
 description: Stream your movies, shows, and music to any device.
 category: media
 icon: jellyfin
-version: 0.1.1
+homepage: https://jellyfin.org/
+documentation: https://jellyfin.org/docs/general/installation/container
+version: 0.1.2
 requires:
   - podman
   - quadlets

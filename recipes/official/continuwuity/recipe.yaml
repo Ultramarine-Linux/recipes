@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: continuwuity
+name: Continuwuity
+description: A lightweight Matrix homeserver for chatting with anyone on the Matrix network.
+category: communication
+icon: matrix
+homepage: https://forgejo.ellis.link/continuwuation/continuwuity
+documentation: https://continuwuity.org/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: continuwuity
+  # Becomes the end of every user ID (@you:example.com) and can't be changed
+  # later without starting over.
+  - key: server_name
+    label: Server name
+    type: string
+    required: true
+    default: example.com
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 8008
+    min: 1024
+    max: 65535
+  - key: allow_registration
+    label: Allow registration with a token
+    type: boolean
+    required: true
+    default: true
+  - key: registration_token
+    label: Registration token
+    type: secret
+    required: true
+    generate: random_32
+resources:
+  - type: volume
+    filename: "{{ app_id }}-db.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: continuwuity.container.tera

@@ -23,7 +23,12 @@ use serde_json::{Map, Value};
 use sha2::{Digest, Sha256};
 use tetra_recipe::{AppRecipe, verification::bundle_sha256};
 
-use crate::{json, locales::prune_locales, repo::Repo};
+use crate::{
+    history::{MAX_VERSIONS, Published, Version, compare_versions, published_versions},
+    json,
+    locales::prune_locales,
+    repo::Repo,
+};
 
 /// Published format version, also the `/v<FORMAT>/` path prefix.
 pub const FORMAT: u32 = 1;
@@ -46,10 +51,14 @@ struct IndexEntry<'a> {
     description: &'a str,
     category: Option<&'a str>,
     icon: Option<&'a str>,
+    homepage: Option<&'a str>,
+    documentation: Option<&'a str>,
     version: &'a str,
     catalog: &'static str,
     sha256: String,
     bundle: String,
+    /// Every version still served, newest first; the current one included.
+    versions: &'a [Version],
 }
 
 #[derive(Serialize)]
@@ -67,12 +76,25 @@ struct Bundle<'a> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Catalog {
     pub files: BTreeMap<String, String>,
+    /// Recipes in the index.
+    pub recipes: usize,
+    /// Older versions that couldn't be carried forward (their bundle was
+    /// missing or corrupt), so they're no longer listed.
+    pub warnings: Vec<String>,
 }
 
 /// Render the catalog. Run [`crate::check`] first: this only fails on
 /// recipes tetra can't parse.
-pub fn build(repo: &Repo) -> Result<Catalog> {
+///
+/// With `previous`, the previously published catalog, each recipe also lists
+/// (and ships the bundles of) up to [`MAX_VERSIONS`] versions in total, the
+/// newest first, so dashboards can install an older one.
+pub fn build(repo: &Repo, previous: Option<&Published>) -> Result<Catalog> {
     let mut files = BTreeMap::new();
+    let mut warnings = Vec::new();
+    let mut published = previous
+        .map(|previous| published_versions(&previous.index))
+        .unwrap_or_default();
     let mut entries = Vec::new();
     for recipe in &repo.recipes {
         let parsed = AppRecipe::load_str(&recipe.yaml)
@@ -90,7 +112,44 @@ pub fn build(repo: &Repo) -> Result<Catalog> {
         let file_hash = hex::encode(Sha256::digest(bundle.as_bytes()));
         let path = format!("recipes/{}/{}.json", parsed.recipe_id, &file_hash[..16]);
         files.insert(path.clone(), bundle);
-        entries.push((recipe, parsed, sha256, path));
+
+        let mut versions = vec![Version {
+            version: parsed.version.clone(),
+            sha256: sha256.clone(),
+            bundle: path.clone(),
+        }];
+        let older = published.remove(&parsed.recipe_id).unwrap_or_default();
+        // `check` makes sure a published version never changes its bundle,
+        // so the current version's own entry is simply replaced.
+        for old in older
+            .into_iter()
+            .filter(|old| old.version != parsed.version)
+        {
+            if versions.len() >= MAX_VERSIONS {
+                break;
+            }
+            let Some(previous) = previous else { break };
+            match previous.bundle(&old.bundle) {
+                Ok(text)
+                    if old
+                        .bundle
+                        .starts_with(&format!("recipes/{}/", parsed.recipe_id)) =>
+                {
+                    files.insert(old.bundle.clone(), text);
+                    versions.push(old);
+                }
+                Ok(_) => warnings.push(format!(
+                    "{} {}: bundle {} belongs to another recipe; dropped",
+                    parsed.recipe_id, old.version, old.bundle
+                )),
+                Err(error) => warnings.push(format!(
+                    "{} {}: {error:#}; dropped",
+                    parsed.recipe_id, old.version
+                )),
+            }
+        }
+        versions.sort_by(|a, b| compare_versions(&b.version, &a.version));
+        entries.push((recipe, parsed, sha256, path, versions));
     }
 
     let index = Index {
@@ -100,21 +159,28 @@ pub fn build(repo: &Repo) -> Result<Catalog> {
         locales: prune_locales(&repo.catalog_locales),
         recipes: entries
             .iter()
-            .map(|(recipe, parsed, sha256, path)| IndexEntry {
+            .map(|(recipe, parsed, sha256, path, versions)| IndexEntry {
                 id: &parsed.recipe_id,
                 name: &parsed.name,
                 description: parsed.description.as_deref().unwrap_or_default(),
                 category: parsed.category.as_deref(),
                 icon: parsed.icon.as_deref(),
+                homepage: parsed.homepage.as_deref(),
+                documentation: parsed.documentation.as_deref(),
                 version: &parsed.version,
                 catalog: recipe.tier.as_str(),
                 sha256: sha256.clone(),
                 bundle: path.clone(),
+                versions,
             })
             .collect(),
     };
     files.insert("index.json".into(), json::to_string(&index));
-    Ok(Catalog { files })
+    Ok(Catalog {
+        files,
+        recipes: entries.len(),
+        warnings,
+    })
 }
 
 impl Catalog {
@@ -138,9 +204,9 @@ impl Catalog {
         Ok(base)
     }
 
-    /// Number of recipes (bundles) in the catalog.
+    /// Number of recipes in the catalog.
     #[must_use]
-    pub fn recipe_count(&self) -> usize {
-        self.files.len().saturating_sub(1)
+    pub const fn recipe_count(&self) -> usize {
+        self.recipes
     }
 }

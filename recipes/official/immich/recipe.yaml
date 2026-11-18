@@ -4,7 +4,9 @@ name: Immich
 description: Back up and browse your photos and videos, with face and object search.
 category: media
 icon: immich
-version: 0.1.1
+homepage: https://immich.app/
+documentation: https://docs.immich.app/install/docker-compose
+version: 0.1.2
 requires:
   - podman
   - quadlets

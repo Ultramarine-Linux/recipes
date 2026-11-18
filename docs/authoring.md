@@ -57,6 +57,18 @@ never changes another app's install.
 Name the app's main container `<id>.container.tera`, and other templates
 after what they run (`postgres.container.tera`, `index.html.tera`).
 
+## Links
+
+Set `homepage` to the upstream project's site and `documentation` to the
+docs most useful for running it, usually its container or compose docs.
+Both must be `https://` URLs. Dashboards show them next to the recipe; tetra
+ignores them.
+
+```yaml
+homepage: https://forgejo.org/
+documentation: https://forgejo.org/docs/latest/admin/installation/docker/
+```
+
 ## Tooling
 
 You need a Rust toolchain. Cargo fetches tetra's `tetra-recipe` crate from
@@ -119,3 +131,42 @@ On top of tetra's rules:
 Bump `version` whenever `recipe.yaml` or any template it uses changes: hosts
 record the version and digest they installed, and dashboards offer updates by
 version. Translation changes don't need a bump.
+
+The catalog keeps serving the last 10 versions of each recipe, so a version
+number must always mean the same bundle and versions only go forward. To
+revert a change, publish the old contents under a new version. `check
+--previous` (CI) and the origin enforce both.
+
+## Updating images
+
+`.github/workflows/update-images.yml` runs `recipes update-images` once a day
+and opens a pull request:
+
+```sh
+cargo run -p recipes -- update-images [<id>...] [--previous index.json] [--dry-run]
+```
+
+It needs `skopeo`. Each pinned image moves to the newest tag in its release
+line, meaning the same prefix and suffix and the same number of version
+components (`1.2.3` → `1.3.0`, `2026.10.1-java25` → `2026.11.0-java25`,
+never `1.2.3` → `1.3.0-rc.1`). Tags without a version (`alpine`) or a
+floating one (`18`) get their digest refreshed. Recipes that change get a
+patch bump, unless they're already ahead of the published version. If any
+image of a recipe can't be checked, the whole recipe is left alone, since
+images of one app often have to move together.
+
+Major versions are held back and listed in the pull request, because they
+tend to need data migrations (a Postgres major can't read the old data
+directory). Bump those by hand after reading the upgrade notes. A comment
+directly above an `Image=` line changes the policy:
+
+```ini
+# image-updates: patch   only x.y.Z
+# image-updates: minor   x.Y.z and x.y.Z (the default)
+# image-updates: major   anything newer in the line
+# image-updates: off     leave this image alone
+Image=docker.io/library/postgres:18@sha256:…
+```
+
+Calendar versions (`2026.10.1`) have no majors, so the default lets them
+move.

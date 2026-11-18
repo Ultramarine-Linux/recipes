@@ -1,0 +1,48 @@
+{
+	"name": "Minecraft server",
+	"description": "Run a Minecraft Java Edition server, vanilla or modded.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"accept_eula": {
+			"label": "I accept the Minecraft EULA"
+		},
+		"server_type": {
+			"label": "Server type",
+			"options": {
+				"vanilla": "vanilla",
+				"paper": "paper",
+				"purpur": "purpur",
+				"fabric": "fabric",
+				"quilt": "quilt",
+				"forge": "forge",
+				"neoforge": "neoforge"
+			}
+		},
+		"minecraft_version": {
+			"label": "Minecraft version"
+		},
+		"memory": {
+			"label": "Memory"
+		},
+		"difficulty": {
+			"label": "Difficulty",
+			"options": {
+				"peaceful": "peaceful",
+				"easy": "easy",
+				"normal": "normal",
+				"hard": "hard"
+			}
+		},
+		"motd": {
+			"label": "Message of the day"
+		},
+		"online_mode": {
+			"label": "Require Minecraft accounts (online mode)"
+		}
+	}
+}

@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../schema/recipe.schema.json
+recipe_id: navidrome
+name: Navidrome
+description: Stream your music collection from any browser or Subsonic app.
+category: media
+homepage: https://www.navidrome.org/
+documentation: https://www.navidrome.org/docs/
+version: 0.1.0
+requires:
+  - podman
+  - quadlets
+parameters:
+  - key: app_id
+    label: App ID
+    type: string
+    required: true
+    default: navidrome
+  - key: host_port
+    label: Host port
+    type: integer
+    required: true
+    default: 4533
+    min: 1024
+    max: 65535
+resources:
+  - type: volume
+    filename: "{{ app_id }}-data.volume"
+    template: shared/named.volume.tera
+  - type: volume
+    filename: "{{ app_id }}-music.volume"
+    template: shared/named.volume.tera
+  - type: container
+    filename: "{{ app_id }}.container"
+    template: navidrome.container.tera

@@ -1,0 +1,18 @@
+{
+	"name": "SearXNG",
+	"description": "Search the web privately through a metasearch engine you host.",
+	"parameters": {
+		"app_id": {
+			"label": "App ID"
+		},
+		"host_port": {
+			"label": "Host port"
+		},
+		"base_url": {
+			"label": "Public URL"
+		},
+		"secret_key": {
+			"label": "Secret key"
+		}
+	}
+}

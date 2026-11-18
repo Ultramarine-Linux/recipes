@@ -15,6 +15,7 @@ the result behind Cloudflare.
 cargo run -p recipes -- extract   # after changing any user-facing string
 cargo run -p recipes -- check     # everything CI and the origin enforce
 cargo run -p recipes -- build     # check, then write dist/v1/
+cargo run -p recipes -- update-images --dry-run   # newer image tags and digests
 ```
 
 Each recipe lives in `recipes/official/<id>/` or `recipes/community/<id>/`,

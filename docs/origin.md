@@ -15,6 +15,13 @@ one waits, and the waiting one is always the newest push. The newest three
 releases are kept. On startup it builds the branch head, catching up on
 pushes it missed, and retries every five minutes until something is live.
 
+Each build starts from the live release: its index and the bundles of older
+versions are carried forward, so every recipe keeps listing (and serving) up
+to 10 versions. The version checks also run against it, so a push that
+changes a published version without bumping it, or moves a version
+backwards, fails like any other check. History lives only in `DATA_DIR`:
+losing the volume starts every recipe over with just its current version.
+
 ## Configuration
 
 | Variable                  | Default                      |                                                                         |

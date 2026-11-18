@@ -32,10 +32,16 @@ Serve both with `Access-Control-Allow-Origin: *` so dashboards can fetch them.
 			"description": "...",
 			"category": "apps",
 			"icon": "nextcloud",
+			"homepage": "https://nextcloud.com/",
+			"documentation": "https://github.com/nextcloud/docker",
 			"version": "0.1.1",
 			"catalog": "official",
 			"sha256": "<tetra bundle digest>",
-			"bundle": "recipes/nextcloud/<hash>.json"
+			"bundle": "recipes/nextcloud/<hash>.json",
+			"versions": [
+				{ "version": "0.1.1", "sha256": "<tetra bundle digest>", "bundle": "recipes/nextcloud/<hash>.json" },
+				{ "version": "0.1.0", "sha256": "<tetra bundle digest>", "bundle": "recipes/nextcloud/<hash>.json" }
+			]
 		}
 	]
 }
@@ -46,9 +52,18 @@ Serve both with `Access-Control-Allow-Origin: *` so dashboards can fetch them.
 - `categories`: category id → `{ "name": <English name> }`.
 - `locales`: locale → `{ "categories": { <id>: <translated name> } }`.
 - `recipes`: sorted by `id`. `description` is `""` when the recipe has none,
-  `icon` is `null`. `catalog` is `official` or `community` here; custom
-  catalogs may use anything (it's ignored for them). `bundle` is relative to
-  the `/v1/` base.
+  `icon` is `null`. `homepage` (the upstream project's site) and
+  `documentation` (its docs, usually for running it in a container) are
+  `https://` URLs, or `null` when the recipe doesn't set them. `catalog` is
+  `official` or `community` here; custom catalogs may use anything (it's
+  ignored for them). `bundle` is relative to the `/v1/` base.
+- `version`, `sha256` and `bundle` are the latest version, the one to
+  install by default. `versions` lists every version still served, the
+  latest included, newest first by semver precedence (at most 10 here), each
+  with its own `sha256` and `bundle`. Install or roll back to any of them the
+  same way. A version always means the same bundle, and the latest version
+  never goes backwards. Custom catalogs may leave `versions` out; treat that
+  as a list holding just the top-level version.
 
 ## Bundles
 
@@ -78,7 +93,8 @@ Serve both with `Access-Control-Allow-Origin: *` so dashboards can fetch them.
   to the English text in `recipe`.
 - `<hash>` is the first 16 hex digits of the SHA-256 of the bundle file
   itself, translations included, so a bundle URL never changes content and
-  can be cached forever. Only `index.json` needs revalidating.
+  can be cached forever. Only `index.json` needs revalidating. Older
+  versions keep the bundle file (and URL) they were published with.
 
 ## Encoding
 
@@ -86,7 +102,8 @@ All files are UTF-8 JSON, indented with tabs, with a trailing newline. Keys
 appear in the order shown. Category, parameter, and option keys follow the
 source YAML, keys inside a translation follow its file, and template names
 and locale names are in byte order.
-Builds are deterministic: an unchanged tree produces identical bytes, so
+Builds are deterministic: an unchanged tree built on the same previous
+catalog produces identical bytes, so
 mirrors and sync jobs only see changes when the catalog changed.
 
 ## Consumers
